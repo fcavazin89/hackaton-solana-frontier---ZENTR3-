@@ -9,6 +9,7 @@ import AgentChat from "@/pages/agent-chat";
 import BusinessPlan from "@/pages/business-plan";
 import TaskBoard from "@/pages/task-board";
 import ProtocolSim from "@/pages/protocol-simulator";
+import { ProjectProvider } from "@/context/project-context";
 
 const queryClient = new QueryClient();
 
@@ -31,10 +32,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
+        <ProjectProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <Toaster />
+        </ProjectProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

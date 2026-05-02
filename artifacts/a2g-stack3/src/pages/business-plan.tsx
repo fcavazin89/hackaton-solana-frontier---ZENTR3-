@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocation } from "wouter";
 import * as z from "zod";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,13 +9,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Loader2, Play, LayoutDashboard } from "lucide-react";
+import { Download, Loader2, Play, LayoutDashboard, Rocket, CheckCircle2 } from "lucide-react";
 import { useGeneratePlan } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AGENTS } from "@/lib/agents";
 import { exportToPdf } from "@/lib/export-pdf";
+import { useProject, createTasksFromPlan } from "@/context/project-context";
 
 const formSchema = z.object({
   projectName: z.string().min(2, "Project name is required"),
@@ -23,9 +25,12 @@ const formSchema = z.object({
 
 export default function BusinessPlan() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const { setBusinessPlan, setTasks, setActivationState } = useProject();
   const generatePlanMutation = useGeneratePlan();
   const [results, setResults] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [planReady, setPlanReady] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -34,10 +39,27 @@ export default function BusinessPlan() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    setPlanReady(false);
     generatePlanMutation.mutate({ data: values }, {
-      onSuccess: (data) => {
+      onSuccess: (data: any) => {
         setResults(data);
-        toast({ title: "Plan Generated", description: "Multi-agent synthesis complete." });
+
+        const planData = {
+          projectName: values.projectName,
+          description: values.description,
+          research: data.research || "",
+          tokenomics: data.tokenomics || "",
+          architecture: data.architecture || "",
+          gtm: data.gtm || "",
+          compliance: data.compliance || "",
+        };
+
+        setBusinessPlan(planData);
+        setTasks(createTasksFromPlan(planData));
+        setActivationState("ready");
+        setPlanReady(true);
+
+        toast({ title: "Plan Generated", description: "Multi-agent synthesis complete. Tasks auto-created." });
       },
       onError: () => {
         toast({ title: "Generation Failed", description: "Failed to generate business plan.", variant: "destructive" });
@@ -87,8 +109,34 @@ export default function BusinessPlan() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Post-generation CTA */}
+      {planReady && (
+        <div className="relative overflow-hidden rounded-lg border border-primary/40 bg-primary/5 p-5 animate-in slide-in-from-top duration-500">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent pointer-events-none" />
+          <div className="flex items-center justify-between gap-4 relative">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-full bg-primary/20 border border-primary/40">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-display font-bold text-primary">SYNTHESIS COMPLETE</p>
+                <p className="text-xs font-mono text-muted-foreground mt-0.5">
+                  10 tasks auto-created · 12 agents ready to activate · Protocol Sim seeded
+                </p>
+              </div>
+            </div>
+            <Button
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-display tracking-wider shrink-0"
+              onClick={() => navigate("/")}
+            >
+              <Rocket className="w-4 h-4 mr-2" />
+              LAUNCH COMMAND CENTER
+            </Button>
+          </div>
+        </div>
+      )}
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-1 bg-card/50 backdrop-blur border-border/50 h-fit">
           <CardHeader>
             <CardTitle className="font-display text-lg">PROJECT_PARAMS</CardTitle>
@@ -97,36 +145,26 @@ export default function BusinessPlan() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="projectName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-mono text-xs text-muted-foreground">PROJECT_NAME</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Nexus Protocol" className="font-mono bg-input/50" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-mono text-xs text-muted-foreground">CORE_THESIS</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Describe the core mechanism and value proposition..."
-                          className="min-h-[150px] font-mono text-sm bg-input/50 resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormField control={form.control} name="projectName" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-mono text-xs text-muted-foreground">PROJECT_NAME</FormLabel>
+                    <FormControl><Input placeholder="e.g. Nexus Protocol" className="font-mono bg-input/50" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="description" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-mono text-xs text-muted-foreground">CORE_THESIS</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe the core mechanism and value proposition..."
+                        className="min-h-[150px] font-mono text-sm bg-input/50 resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
                 <Button
                   type="submit"
                   className="w-full bg-primary text-primary-foreground font-display tracking-wider hover:bg-primary/90 neon-border mt-4"
@@ -207,41 +245,16 @@ export default function BusinessPlan() {
         </div>
       </div>
 
-      {/* Hidden print-ready view — all sections stacked, captured for PDF */}
+      {/* Hidden print view — all sections for PDF */}
       {results && (
-        <div
-          ref={printRef}
-          style={{
-            position: "absolute",
-            left: "-9999px",
-            top: 0,
-            width: "794px",
-            backgroundColor: "#080F14",
-            color: "#BDB7C3",
-            padding: "40px",
-            fontFamily: "sans-serif",
-          }}
-        >
+        <div ref={printRef} style={{ position: "absolute", left: "-9999px", top: 0, width: "794px", backgroundColor: "#080F14", color: "#BDB7C3", padding: "40px", fontFamily: "sans-serif" }}>
           <div style={{ marginBottom: "32px", borderBottom: "1px solid #1E2730", paddingBottom: "16px" }}>
-            <div style={{ color: "#00D1FF", fontSize: "22px", fontWeight: "bold", letterSpacing: "2px" }}>
-              A2G STACK3 — BUSINESS PLAN
-            </div>
-            <div style={{ color: "#5A6470", fontSize: "12px", marginTop: "4px" }}>
-              {form.getValues("projectName")} · Generated {new Date().toLocaleDateString()}
-            </div>
+            <div style={{ color: "#00D1FF", fontSize: "22px", fontWeight: "bold", letterSpacing: "2px" }}>A2G STACK3 — BUSINESS PLAN</div>
+            <div style={{ color: "#5A6470", fontSize: "12px", marginTop: "4px" }}>{form.getValues("projectName")} · Generated {new Date().toLocaleDateString()}</div>
           </div>
           {sections.map((sec) => (
             <div key={sec.id} style={{ marginBottom: "36px" }}>
-              <div style={{
-                color: "#00D1FF",
-                fontSize: "14px",
-                fontWeight: "bold",
-                letterSpacing: "1px",
-                textTransform: "uppercase",
-                borderBottom: "1px solid #1E2730",
-                paddingBottom: "8px",
-                marginBottom: "16px",
-              }}>
+              <div style={{ color: "#00D1FF", fontSize: "14px", fontWeight: "bold", letterSpacing: "1px", textTransform: "uppercase", borderBottom: "1px solid #1E2730", paddingBottom: "8px", marginBottom: "16px" }}>
                 {sec.label}
               </div>
               <div style={{ fontSize: "13px", lineHeight: "1.8", color: "#BDB7C3", whiteSpace: "pre-wrap" }}>

@@ -6,14 +6,25 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { MermaidChart } from "@/components/mermaid-chart";
 import { Terminal, Cpu, Network, Zap, Download, Loader2 } from "lucide-react";
 import { exportToPdf } from "@/lib/export-pdf";
+import { useProject } from "@/context/project-context";
 
-const generateData = () => {
+function seedFromString(str: string): number {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) { h = (Math.imul(31, h) + str.charCodeAt(i)) | 0; }
+  return Math.abs(h);
+}
+
+function generateData(seed: number = 1000, initialPrice: number = 1000, initialTvl: number = 500) {
   const data = [];
-  let value = 1000;
-  let staked = 500;
+  let value = initialPrice;
+  let staked = initialTvl;
+  const rng = (i: number) => {
+    const x = Math.sin(seed + i) * 10000;
+    return x - Math.floor(x);
+  };
   for (let i = 0; i < 20; i++) {
-    value = value + (Math.random() - 0.4) * 100;
-    staked = staked + (Math.random() - 0.3) * 50;
+    value = value + (rng(i * 2) - 0.4) * (initialPrice * 0.1);
+    staked = staked + (rng(i * 2 + 1) - 0.3) * (initialTvl * 0.1);
     data.push({
       time: `T+${i}`,
       price: Math.max(10, value),
@@ -21,31 +32,25 @@ const generateData = () => {
     });
   }
   return data;
-};
-
-const PROTOCOL_DIAGRAM = `
-graph TD
-    A[User Wallet] -->|Stake| B(OVP Contract)
-    B --> C{PoV Validator}
-    C -->|Approved| D[Rewards Pool]
-    C -->|Rejected| E[Slashing]
-    D -->|Emit Yield| A
-    F[AI Agents] -.->|Optimize| B
-    F -.->|Adjust Params| D
-    
-    style A fill:#080F14,stroke:#00D1FF,stroke-width:2px,color:#BDB7C3
-    style B fill:#0A121A,stroke:#00D1FF,stroke-width:2px,color:#00D1FF
-    style C fill:#0A121A,stroke:#f59e0b,stroke-width:2px,color:#f59e0b
-    style D fill:#0A121A,stroke:#10b981,stroke-width:2px,color:#10b981
-    style E fill:#0A121A,stroke:#ef4444,stroke-width:2px,color:#ef4444
-    style F fill:#0A121A,stroke:#8b5cf6,stroke-width:2px,stroke-dasharray: 5 5,color:#8b5cf6
-`;
+}
 
 export default function ProtocolSim() {
-  const [data, setData] = useState(generateData());
+  const { businessPlan } = useProject();
+  const seed = businessPlan ? seedFromString(businessPlan.projectName) : 42000;
+  const tokenSymbol = businessPlan
+    ? businessPlan.projectName.replace(/[^A-Z]/gi, '').toUpperCase().slice(0, 4) || 'TKN'
+    : 'OVP';
+  const initPrice = 1000 + (seed % 500);
+  const initTvl = 500 + (seed % 300);
+
+  const [data, setData] = useState(() => generateData(seed, initPrice, initTvl));
   const [isRunning, setIsRunning] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setData(generateData(seed, initPrice, initTvl));
+  }, [seed]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -53,10 +58,13 @@ export default function ProtocolSim() {
       setData(prev => {
         const newData = [...prev.slice(1)];
         const last = prev[prev.length - 1];
+        const x = Math.sin(Date.now()) * 10000;
+        const rng = x - Math.floor(x);
+        const rng2 = Math.abs(Math.sin(Date.now() + 1) * 10000) % 1;
         newData.push({
           time: `T+${parseInt(last.time.substring(2)) + 1}`,
-          price: Math.max(10, last.price + (Math.random() - 0.4) * 100),
-          tvl: Math.max(100, last.tvl + (Math.random() - 0.3) * 50),
+          price: Math.max(10, last.price + (rng - 0.4) * (initPrice * 0.1)),
+          tvl: Math.max(100, last.tvl + (rng2 - 0.3) * (initTvl * 0.1)),
         });
         return newData;
       });
@@ -71,7 +79,8 @@ export default function ProtocolSim() {
     setIsRunning(false);
     await new Promise(r => setTimeout(r, 300));
     try {
-      await exportToPdf(contentRef.current, `A2G_ProtocolSim_${new Date().toISOString().slice(0, 10)}`);
+      const name = businessPlan?.projectName || "Protocol";
+      await exportToPdf(contentRef.current, `A2G_ProtocolSim_${name.replace(/\s+/g, "_")}`);
     } finally {
       setIsExporting(false);
       if (wasRunning) setIsRunning(true);
@@ -80,13 +89,49 @@ export default function ProtocolSim() {
 
   const lastDataPoint = data[data.length - 1];
 
+  const diagramDef = businessPlan
+    ? `
+graph TD
+    A[User Wallet] -->|Stake ${tokenSymbol}| B(${businessPlan.projectName} Contract)
+    B --> C{PoV Validator}
+    C -->|Approved| D[Rewards Pool]
+    C -->|Rejected| E[Slashing]
+    D -->|Emit Yield| A
+    F[AI Agents] -.->|Optimize| B
+    F -.->|Adjust Params| D
+    style A fill:#080F14,stroke:#00D1FF,stroke-width:2px,color:#BDB7C3
+    style B fill:#0A121A,stroke:#00D1FF,stroke-width:2px,color:#00D1FF
+    style C fill:#0A121A,stroke:#f59e0b,stroke-width:2px,color:#f59e0b
+    style D fill:#0A121A,stroke:#10b981,stroke-width:2px,color:#10b981
+    style E fill:#0A121A,stroke:#ef4444,stroke-width:2px,color:#ef4444
+    style F fill:#0A121A,stroke:#8b5cf6,stroke-width:2px,stroke-dasharray: 5 5,color:#8b5cf6`
+    : `
+graph TD
+    A[User Wallet] -->|Stake| B(OVP Contract)
+    B --> C{PoV Validator}
+    C -->|Approved| D[Rewards Pool]
+    C -->|Rejected| E[Slashing]
+    D -->|Emit Yield| A
+    F[AI Agents] -.->|Optimize| B
+    F -.->|Adjust Params| D
+    style A fill:#080F14,stroke:#00D1FF,stroke-width:2px,color:#BDB7C3
+    style B fill:#0A121A,stroke:#00D1FF,stroke-width:2px,color:#00D1FF
+    style C fill:#0A121A,stroke:#f59e0b,stroke-width:2px,color:#f59e0b
+    style D fill:#0A121A,stroke:#10b981,stroke-width:2px,color:#10b981
+    style E fill:#0A121A,stroke:#ef4444,stroke-width:2px,color:#ef4444
+    style F fill:#0A121A,stroke:#8b5cf6,stroke-width:2px,stroke-dasharray: 5 5,color:#8b5cf6`;
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">PROTOCOL_SIMULATOR</h1>
-          <p className="font-mono text-sm text-muted-foreground">OVP / PoV Network Telemetry</p>
+          <h1 className="font-display text-2xl font-bold text-foreground">
+            {businessPlan ? `${businessPlan.projectName.toUpperCase()} — PROTOCOL_SIM` : 'PROTOCOL_SIMULATOR'}
+          </h1>
+          <p className="font-mono text-sm text-muted-foreground">
+            {businessPlan ? `${tokenSymbol} / PoV Network Telemetry` : 'OVP / PoV Network Telemetry'}
+          </p>
         </div>
         <div className="flex gap-2 items-center">
           <Button
@@ -113,8 +158,6 @@ export default function ProtocolSim() {
       </div>
 
       <div ref={contentRef} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Left Col */}
         <div className="space-y-6">
           <Card className="bg-card/50 backdrop-blur border-border/50">
             <CardHeader className="pb-2">
@@ -132,9 +175,15 @@ export default function ProtocolSim() {
                 <p className="text-xl font-display text-emerald-400">${lastDataPoint?.tvl.toFixed(2)}M</p>
               </div>
               <div>
-                <p className="text-xs font-mono text-muted-foreground mb-1">TOKEN_PRICE</p>
+                <p className="text-xs font-mono text-muted-foreground mb-1">{tokenSymbol}_PRICE</p>
                 <p className="text-xl font-display text-primary">${lastDataPoint?.price.toFixed(2)}</p>
               </div>
+              {businessPlan && (
+                <div className="pt-2 border-t border-border/50">
+                  <p className="text-xs font-mono text-muted-foreground mb-1">PROJECT</p>
+                  <p className="text-sm font-display text-muted-foreground truncate">{businessPlan.projectName}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -153,6 +202,9 @@ export default function ProtocolSim() {
               <div>[SIM] Advancing to next epoch...</div>
               <div className="text-primary">[AGENT:Tokenomics] Yield emission rate: optimal</div>
               <div className="text-emerald-400">[PoV] Consensus reached for block 8493</div>
+              {businessPlan && (
+                <div className="text-violet-400">[PROJECT] {businessPlan.projectName} simulation active</div>
+              )}
               <div className="flex gap-2 mt-2 animate-pulse text-primary/70">
                 <span>{">"}</span><span>_</span>
               </div>
@@ -160,12 +212,12 @@ export default function ProtocolSim() {
           </Card>
         </div>
 
-        {/* Right Col */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="bg-card/50 backdrop-blur border-border/50">
             <CardHeader>
               <CardTitle className="font-display text-lg flex items-center">
-                <Zap className="w-5 h-5 mr-2 text-primary" /> METRICS_TELEMETRY
+                <Zap className="w-5 h-5 mr-2 text-primary" />
+                {businessPlan ? `${tokenSymbol} METRICS_TELEMETRY` : 'METRICS_TELEMETRY'}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -184,10 +236,11 @@ export default function ProtocolSim() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#3A3F45" vertical={false} />
                     <XAxis dataKey="time" stroke="#BDB7C3" fontSize={10} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#BDB7C3" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
+                    <YAxis stroke="#BDB7C3" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val.toFixed(0)}`} />
                     <Tooltip
                       contentStyle={{ backgroundColor: '#0A121A', borderColor: '#3A3F45', fontFamily: 'JetBrains Mono', fontSize: '12px' }}
                       itemStyle={{ color: '#00D1FF' }}
+                      formatter={(value: any, name: string) => [`$${Number(value).toFixed(2)}`, name === 'price' ? tokenSymbol : 'TVL']}
                     />
                     <Area type="monotone" dataKey="price" stroke="#00D1FF" fillOpacity={1} fill="url(#colorPrice)" strokeWidth={2} />
                     <Area type="monotone" dataKey="tvl" stroke="#10b981" fillOpacity={1} fill="url(#colorTvl)" strokeWidth={2} />
@@ -202,14 +255,15 @@ export default function ProtocolSim() {
               <CardTitle className="font-display text-lg flex items-center">
                 <Cpu className="w-5 h-5 mr-2 text-primary" /> ARCHITECTURE_GRAPH
               </CardTitle>
-              <CardDescription className="font-mono text-xs">Live topology representation</CardDescription>
+              <CardDescription className="font-mono text-xs">
+                {businessPlan ? `${businessPlan.projectName} topology` : 'Live topology representation'}
+              </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <MermaidChart chart={PROTOCOL_DIAGRAM} />
+              <MermaidChart chart={diagramDef} />
             </CardContent>
           </Card>
         </div>
-
       </div>
     </div>
   );
