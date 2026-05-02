@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: gemini
+    description: Gemini AI chat and agent operations
+  - name: agents
+    description: A2G STACK3 agent operations
 paths:
   /healthz:
     get:
@@ -24,6 +28,223 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /gemini/conversations:
+    get:
+      operationId: listGeminiConversations
+      tags: [gemini]
+      summary: List all conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GeminiConversation"
+    post:
+      operationId: createGeminiConversation
+      tags: [gemini]
+      summary: Create a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGeminiConversationBody"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeminiConversation"
+  /gemini/conversations/{id}:
+    get:
+      operationId: getGeminiConversation
+      tags: [gemini]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeminiConversationWithMessages"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeminiError"
+    delete:
+      operationId: deleteGeminiConversation
+      tags: [gemini]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeminiError"
+  /gemini/conversations/{id}/messages:
+    get:
+      operationId: listGeminiMessages
+      tags: [gemini]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GeminiMessage"
+    post:
+      operationId: sendGeminiMessage
+      tags: [gemini]
+      summary: Send a message and receive an AI response (SSE stream)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendGeminiMessageBody"
+      responses:
+        "200":
+          description: SSE stream of assistant response chunks
+          content:
+            text/event-stream: {}
+  /agents/chat:
+    post:
+      operationId: agentChat
+      tags: [agents]
+      summary: Chat with a specific agent (SSE stream)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentChatBody"
+      responses:
+        "200":
+          description: SSE stream of agent response
+          content:
+            text/event-stream: {}
+  /agents/plan:
+    post:
+      operationId: generatePlan
+      tags: [agents]
+      summary: Generate a multi-agent startup plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GeneratePlanBody"
+      responses:
+        "200":
+          description: Generated business plan sections
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessPlanResponse"
+  /agents/tasks:
+    get:
+      operationId: listAgentTasks
+      tags: [agents]
+      summary: List all agent tasks
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgentTask"
+    post:
+      operationId: createAgentTask
+      tags: [agents]
+      summary: Create a new agent task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAgentTaskBody"
+      responses:
+        "201":
+          description: Created task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentTask"
+  /agents/tasks/{id}:
+    patch:
+      operationId: updateAgentTask
+      tags: [agents]
+      summary: Update an agent task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAgentTaskBody"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentTask"
+    delete:
+      operationId: deleteAgentTask
+      tags: [agents]
+      summary: Delete an agent task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
 components:
   schemas:
     HealthStatus:
@@ -33,4 +254,198 @@ components:
           type: string
       required:
         - status
-
+    GeminiConversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - createdAt
+    GeminiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversationId
+        - role
+        - content
+        - createdAt
+    CreateGeminiConversationBody:
+      type: object
+      properties:
+        title:
+          type: string
+      required:
+        - title
+    SendGeminiMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
+    GeminiConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeminiMessage"
+      required:
+        - id
+        - title
+        - createdAt
+        - messages
+    GeminiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    AgentChatBody:
+      type: object
+      properties:
+        agentId:
+          type: string
+        agentRole:
+          type: string
+        systemPrompt:
+          type: string
+        message:
+          type: string
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatHistoryItem"
+      required:
+        - agentId
+        - agentRole
+        - systemPrompt
+        - message
+    ChatHistoryItem:
+      type: object
+      properties:
+        role:
+          type: string
+        content:
+          type: string
+      required:
+        - role
+        - content
+    GeneratePlanBody:
+      type: object
+      properties:
+        projectName:
+          type: string
+        description:
+          type: string
+      required:
+        - projectName
+        - description
+    BusinessPlanResponse:
+      type: object
+      properties:
+        research:
+          type: string
+        tokenomics:
+          type: string
+        architecture:
+          type: string
+        gtm:
+          type: string
+        compliance:
+          type: string
+      required:
+        - research
+        - tokenomics
+        - architecture
+        - gtm
+        - compliance
+    AgentTask:
+      type: object
+      properties:
+        id:
+          type: string
+        agentId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        priority:
+          type: string
+        progress:
+          type: integer
+        assignedTo:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - agentId
+        - title
+        - description
+        - status
+        - priority
+        - progress
+        - assignedTo
+        - createdAt
+    CreateAgentTaskBody:
+      type: object
+      properties:
+        agentId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+        assignedTo:
+          type: string
+      required:
+        - agentId
+        - title
+        - description
+        - priority
+        - assignedTo
+    UpdateAgentTaskBody:
+      type: object
+      properties:
+        status:
+          type: string
+        progress:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string

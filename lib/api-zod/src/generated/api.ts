@@ -14,3 +14,174 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary List all conversations
+ */
+export const ListGeminiConversationsResponseItem = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const ListGeminiConversationsResponse = zod.array(
+  ListGeminiConversationsResponseItem,
+);
+
+/**
+ * @summary Create a new conversation
+ */
+export const CreateGeminiConversationBody = zod.object({
+  title: zod.string(),
+});
+
+/**
+ * @summary Get conversation with messages
+ */
+export const GetGeminiConversationParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetGeminiConversationResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  createdAt: zod.coerce.date(),
+  messages: zod.array(
+    zod.object({
+      id: zod.number(),
+      conversationId: zod.number(),
+      role: zod.string(),
+      content: zod.string(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Delete a conversation
+ */
+export const DeleteGeminiConversationParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List messages in a conversation
+ */
+export const ListGeminiMessagesParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ListGeminiMessagesResponseItem = zod.object({
+  id: zod.number(),
+  conversationId: zod.number(),
+  role: zod.string(),
+  content: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const ListGeminiMessagesResponse = zod.array(
+  ListGeminiMessagesResponseItem,
+);
+
+/**
+ * @summary Send a message and receive an AI response (SSE stream)
+ */
+export const SendGeminiMessageParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const SendGeminiMessageBody = zod.object({
+  content: zod.string(),
+});
+
+/**
+ * @summary Chat with a specific agent (SSE stream)
+ */
+export const AgentChatBody = zod.object({
+  agentId: zod.string(),
+  agentRole: zod.string(),
+  systemPrompt: zod.string(),
+  message: zod.string(),
+  history: zod
+    .array(
+      zod.object({
+        role: zod.string(),
+        content: zod.string(),
+      }),
+    )
+    .optional(),
+});
+
+/**
+ * @summary Generate a multi-agent startup plan
+ */
+export const GeneratePlanBody = zod.object({
+  projectName: zod.string(),
+  description: zod.string(),
+});
+
+export const GeneratePlanResponse = zod.object({
+  research: zod.string(),
+  tokenomics: zod.string(),
+  architecture: zod.string(),
+  gtm: zod.string(),
+  compliance: zod.string(),
+});
+
+/**
+ * @summary List all agent tasks
+ */
+export const ListAgentTasksResponseItem = zod.object({
+  id: zod.string(),
+  agentId: zod.string(),
+  title: zod.string(),
+  description: zod.string(),
+  status: zod.string(),
+  priority: zod.string(),
+  progress: zod.number(),
+  assignedTo: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const ListAgentTasksResponse = zod.array(ListAgentTasksResponseItem);
+
+/**
+ * @summary Create a new agent task
+ */
+export const CreateAgentTaskBody = zod.object({
+  agentId: zod.string(),
+  title: zod.string(),
+  description: zod.string(),
+  priority: zod.string(),
+  assignedTo: zod.string(),
+});
+
+/**
+ * @summary Update an agent task
+ */
+export const UpdateAgentTaskParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdateAgentTaskBody = zod.object({
+  status: zod.string().optional(),
+  progress: zod.number().optional(),
+  title: zod.string().optional(),
+  description: zod.string().optional(),
+});
+
+export const UpdateAgentTaskResponse = zod.object({
+  id: zod.string(),
+  agentId: zod.string(),
+  title: zod.string(),
+  description: zod.string(),
+  status: zod.string(),
+  priority: zod.string(),
+  progress: zod.number(),
+  assignedTo: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete an agent task
+ */
+export const DeleteAgentTaskParams = zod.object({
+  id: zod.coerce.string(),
+});

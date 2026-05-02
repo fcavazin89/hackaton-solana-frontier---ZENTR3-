@@ -8,3 +8,89 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface GeminiConversation {
+  id: number;
+  title: string;
+  createdAt: string;
+}
+
+export interface GeminiMessage {
+  id: number;
+  conversationId: number;
+  role: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CreateGeminiConversationBody {
+  title: string;
+}
+
+export interface SendGeminiMessageBody {
+  content: string;
+}
+
+export interface GeminiConversationWithMessages {
+  id: number;
+  title: string;
+  createdAt: string;
+  messages: GeminiMessage[];
+}
+
+export interface GeminiError {
+  error: string;
+}
+
+export interface ChatHistoryItem {
+  role: string;
+  content: string;
+}
+
+export interface AgentChatBody {
+  agentId: string;
+  agentRole: string;
+  systemPrompt: string;
+  message: string;
+  history?: ChatHistoryItem[];
+}
+
+export interface GeneratePlanBody {
+  projectName: string;
+  description: string;
+}
+
+export interface BusinessPlanResponse {
+  research: string;
+  tokenomics: string;
+  architecture: string;
+  gtm: string;
+  compliance: string;
+}
+
+export interface AgentTask {
+  id: string;
+  agentId: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  progress: number;
+  assignedTo: string;
+  createdAt: string;
+}
+
+export interface CreateAgentTaskBody {
+  agentId: string;
+  title: string;
+  description: string;
+  priority: string;
+  assignedTo: string;
+}
+
+export interface UpdateAgentTaskBody {
+  status?: string;
+  progress?: number;
+  title?: string;
+  description?: string;
+}
