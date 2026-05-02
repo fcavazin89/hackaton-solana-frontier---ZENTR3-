@@ -157,9 +157,11 @@ export default function AgentChat() {
                   {msg.role === 'user' ? (
                     <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                   ) : (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} className="text-sm">
-                      {msg.content}
-                    </ReactMarkdown>
+                    <div className="text-sm">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
                   )}
                 </div>
               </div>
@@ -168,9 +170,11 @@ export default function AgentChat() {
             {streamingContent && (
               <div className="flex justify-start">
                 <div className="max-w-[85%] rounded-lg p-3 bg-muted/30 border border-border/50 text-foreground prose prose-invert max-w-none">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} className="text-sm">
-                    {streamingContent}
-                  </ReactMarkdown>
+                  <div className="text-sm">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {streamingContent}
+                    </ReactMarkdown>
+                  </div>
                   <span className="inline-block w-2 h-4 bg-primary animate-pulse ml-1 align-middle"></span>
                 </div>
               </div>

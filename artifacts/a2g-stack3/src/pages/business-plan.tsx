@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Loader2, Play } from "lucide-react";
+import { Download, Loader2, Play, LayoutDashboard } from "lucide-react";
 import { useGeneratePlan } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
