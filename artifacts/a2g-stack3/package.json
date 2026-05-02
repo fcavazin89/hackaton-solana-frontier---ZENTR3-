@@ -44,6 +44,7 @@
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-query": "catalog:",
+    "@types/html2pdf.js": "^0.10.0",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -75,6 +76,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "html2pdf.js": "^0.14.0",
     "mermaid": "^11.14.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1"

@@ -1,12 +1,13 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRef, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus, GripVertical, AlertCircle, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, GripVertical, Clock, CheckCircle2, XCircle, Download, Loader2 } from "lucide-react";
+import { Activity } from "lucide-react";
 import { AGENTS } from "@/lib/agents";
+import { exportToPdf } from "@/lib/export-pdf";
 
-// Mock data since API is missing create/update details for this exercise, we'll build the UI completely
 const MOCK_TASKS = [
   { id: '1', title: 'Compile Tokenomics Whitepaper', description: 'Draft the v1 tokenomics including vesting schedule', status: 'IN_PROGRESS', priority: 'HIGH', progress: 65, assignedTo: '2' },
   { id: '2', title: 'Competitor Analysis', description: 'Analyze top 3 competitors in DeFi options', status: 'COMPLETED', priority: 'MEDIUM', progress: 100, assignedTo: '1' },
@@ -21,10 +22,16 @@ const COLUMNS = [
   { id: 'FAILED', label: 'FAILED', icon: XCircle, color: 'text-rose-400' },
 ];
 
-import { Activity } from "lucide-react";
+const PRIORITY_COLORS: Record<string, string> = {
+  HIGH: '#ef4444',
+  MEDIUM: '#f59e0b',
+  LOW: '#10b981',
+};
 
 export default function TaskBoard() {
   const [tasks, setTasks] = useState(MOCK_TASKS);
+  const [isExporting, setIsExporting] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -36,25 +43,48 @@ export default function TaskBoard() {
   };
 
   const moveTask = (taskId: string, newStatus: string) => {
-    setTasks(prev => prev.map(t => 
-      t.id === taskId 
-        ? { ...t, status: newStatus, progress: newStatus === 'COMPLETED' ? 100 : (newStatus === 'PENDING' ? 0 : t.progress) } 
+    setTasks(prev => prev.map(t =>
+      t.id === taskId
+        ? { ...t, status: newStatus, progress: newStatus === 'COMPLETED' ? 100 : (newStatus === 'PENDING' ? 0 : t.progress) }
         : t
     ));
   };
 
+  async function handleExport() {
+    if (!printRef.current) return;
+    setIsExporting(true);
+    try {
+      await exportToPdf(printRef.current, `A2G_TaskBoard_${new Date().toISOString().slice(0, 10)}`);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <div className="h-full flex flex-col space-y-6 animate-in fade-in duration-500">
-      
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">AGENT TASK_BOARD</h1>
           <p className="font-mono text-sm text-muted-foreground">Distributed processing queue</p>
         </div>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs">
-          <Plus className="w-4 h-4 mr-2" />
-          NEW_TASK
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="font-mono text-xs border-primary/50 text-primary hover:bg-primary/10"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            {isExporting
+              ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />EXPORTING...</>
+              : <><Download className="w-4 h-4 mr-2" />EXPORT_PDF</>
+            }
+          </Button>
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs">
+            <Plus className="w-4 h-4 mr-2" />
+            NEW_TASK
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-6 overflow-hidden pb-4">
@@ -73,7 +103,6 @@ export default function TaskBoard() {
             <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1">
               {tasks.filter(t => t.status === column.id).map(task => {
                 const agent = AGENTS.find(a => a.id === task.assignedTo);
-                
                 return (
                   <Card key={task.id} className="bg-card border-border/50 hover:border-primary/50 transition-colors group cursor-grab active:cursor-grabbing">
                     <CardContent className="p-3">
@@ -83,10 +112,8 @@ export default function TaskBoard() {
                         </Badge>
                         <GripVertical className="w-4 h-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
-                      
                       <h4 className="font-sans font-medium text-sm mb-1 leading-tight">{task.title}</h4>
                       <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{task.description}</p>
-                      
                       <div className="space-y-2">
                         {column.id === 'IN_PROGRESS' && (
                           <div className="space-y-1">
@@ -97,7 +124,6 @@ export default function TaskBoard() {
                             <Progress value={task.progress} className="h-1" />
                           </div>
                         )}
-                        
                         <div className="flex items-center justify-between pt-2 border-t border-border/50">
                           {agent ? (
                             <div className="flex items-center gap-1.5" title={agent.name}>
@@ -109,8 +135,6 @@ export default function TaskBoard() {
                           ) : (
                             <span className="text-[10px] font-mono text-muted-foreground">UNASSIGNED</span>
                           )}
-                          
-                          {/* Mock action buttons to simulate drag/drop for this UI demo */}
                           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             {column.id !== 'PENDING' && (
                               <button onClick={() => moveTask(task.id, 'PENDING')} className="p-1 hover:bg-muted rounded"><Clock className="w-3 h-3 text-muted-foreground" /></button>
@@ -126,9 +150,8 @@ export default function TaskBoard() {
                       </div>
                     </CardContent>
                   </Card>
-                )
+                );
               })}
-              
               {tasks.filter(t => t.status === column.id).length === 0 && (
                 <div className="h-24 flex items-center justify-center border-2 border-dashed border-border/50 rounded-lg">
                   <span className="text-xs font-mono text-muted-foreground/50">NO_TASKS</span>
@@ -137,6 +160,72 @@ export default function TaskBoard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Hidden print view */}
+      <div
+        ref={printRef}
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          top: 0,
+          width: "794px",
+          backgroundColor: "#080F14",
+          color: "#BDB7C3",
+          padding: "40px",
+          fontFamily: "sans-serif",
+        }}
+      >
+        <div style={{ marginBottom: "24px", borderBottom: "1px solid #1E2730", paddingBottom: "16px" }}>
+          <div style={{ color: "#00D1FF", fontSize: "20px", fontWeight: "bold", letterSpacing: "2px" }}>
+            A2G STACK3 — TASK BOARD
+          </div>
+          <div style={{ color: "#5A6470", fontSize: "12px", marginTop: "4px" }}>
+            Exported {new Date().toLocaleString()} · {tasks.length} tasks
+          </div>
+        </div>
+        {COLUMNS.map(col => {
+          const colTasks = tasks.filter(t => t.status === col.id);
+          if (colTasks.length === 0) return null;
+          return (
+            <div key={col.id} style={{ marginBottom: "28px" }}>
+              <div style={{
+                fontSize: "12px",
+                fontWeight: "bold",
+                color: col.id === 'IN_PROGRESS' ? '#00D1FF' : col.id === 'COMPLETED' ? '#10b981' : col.id === 'FAILED' ? '#ef4444' : '#5A6470',
+                letterSpacing: "1px",
+                textTransform: "uppercase",
+                marginBottom: "10px",
+                borderBottom: "1px solid #1E2730",
+                paddingBottom: "6px",
+              }}>
+                {col.label} ({colTasks.length})
+              </div>
+              {colTasks.map(task => {
+                const agent = AGENTS.find(a => a.id === task.assignedTo);
+                return (
+                  <div key={task.id} style={{
+                    backgroundColor: "#0A121A",
+                    border: "1px solid #1E2730",
+                    borderRadius: "6px",
+                    padding: "12px 16px",
+                    marginBottom: "8px",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                      <span style={{ fontSize: "13px", fontWeight: "bold", color: "#E8E3EF" }}>{task.title}</span>
+                      <span style={{ fontSize: "10px", color: PRIORITY_COLORS[task.priority] || '#5A6470', fontWeight: "bold" }}>{task.priority}</span>
+                    </div>
+                    <div style={{ fontSize: "11px", color: "#5A6470", marginBottom: "4px" }}>{task.description}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#5A6470" }}>
+                      <span>Assigned: {agent?.name || 'Unassigned'}</span>
+                      {task.progress > 0 && <span>Progress: {task.progress}%</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

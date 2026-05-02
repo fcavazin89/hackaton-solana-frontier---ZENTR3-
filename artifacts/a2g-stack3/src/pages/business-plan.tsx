@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AGENTS } from "@/lib/agents";
+import { exportToPdf } from "@/lib/export-pdf";
 
 const formSchema = z.object({
   projectName: z.string().min(2, "Project name is required"),
@@ -24,32 +25,35 @@ export default function BusinessPlan() {
   const { toast } = useToast();
   const generatePlanMutation = useGeneratePlan();
   const [results, setResults] = useState<any>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      projectName: "",
-      description: "",
-    },
+    defaultValues: { projectName: "", description: "" },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     generatePlanMutation.mutate({ data: values }, {
       onSuccess: (data) => {
         setResults(data);
-        toast({
-          title: "Plan Generated",
-          description: "Multi-agent synthesis complete.",
-        });
+        toast({ title: "Plan Generated", description: "Multi-agent synthesis complete." });
       },
       onError: () => {
-        toast({
-          title: "Generation Failed",
-          description: "Failed to generate business plan.",
-          variant: "destructive",
-        });
+        toast({ title: "Generation Failed", description: "Failed to generate business plan.", variant: "destructive" });
       }
     });
+  }
+
+  async function handleExport() {
+    if (!printRef.current) return;
+    setIsExporting(true);
+    try {
+      const projectName = form.getValues("projectName") || "business-plan";
+      await exportToPdf(printRef.current, `A2G_${projectName.replace(/\s+/g, "_")}`);
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   const sections = [
@@ -62,23 +66,29 @@ export default function BusinessPlan() {
 
   return (
     <div className="max-w-6xl mx-auto w-full space-y-6 animate-in fade-in duration-500">
-      
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">BUSINESS PLAN GENERATOR</h1>
           <p className="font-mono text-sm text-muted-foreground">Multi-agent synthesis protocol</p>
         </div>
         {results && (
-          <Button variant="outline" className="font-mono border-primary/50 text-primary hover:bg-primary/10">
-            <Download className="w-4 h-4 mr-2" />
-            EXPORT_PDF
+          <Button
+            variant="outline"
+            className="font-mono border-primary/50 text-primary hover:bg-primary/10"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            {isExporting
+              ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />EXPORTING...</>
+              : <><Download className="w-4 h-4 mr-2" />EXPORT_PDF</>
+            }
           </Button>
         )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Input Form */}
+
         <Card className="lg:col-span-1 bg-card/50 backdrop-blur border-border/50 h-fit">
           <CardHeader>
             <CardTitle className="font-display text-lg">PROJECT_PARAMS</CardTitle>
@@ -107,33 +117,31 @@ export default function BusinessPlan() {
                     <FormItem>
                       <FormLabel className="font-mono text-xs text-muted-foreground">CORE_THESIS</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Describe the core mechanism and value proposition..." 
-                          className="min-h-[150px] font-mono text-sm bg-input/50 resize-none" 
-                          {...field} 
+                        <Textarea
+                          placeholder="Describe the core mechanism and value proposition..."
+                          className="min-h-[150px] font-mono text-sm bg-input/50 resize-none"
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-primary text-primary-foreground font-display tracking-wider hover:bg-primary/90 neon-border mt-4"
                   disabled={generatePlanMutation.isPending}
                 >
-                  {generatePlanMutation.isPending ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> SYNTHESIZING...</>
-                  ) : (
-                    <><Play className="mr-2 h-4 w-4 fill-current" /> INITIATE_PROTOCOL</>
-                  )}
+                  {generatePlanMutation.isPending
+                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> SYNTHESIZING...</>
+                    : <><Play className="mr-2 h-4 w-4 fill-current" /> INITIATE_PROTOCOL</>
+                  }
                 </Button>
               </form>
             </Form>
           </CardContent>
         </Card>
 
-        {/* Results Area */}
         <div className="lg:col-span-2">
           {generatePlanMutation.isPending ? (
             <Card className="h-[500px] flex items-center justify-center bg-card/30 border-dashed border-border/50">
@@ -162,19 +170,18 @@ export default function BusinessPlan() {
                     {sections.map((sec) => {
                       const Icon = sec.icon as any;
                       return (
-                        <TabsTrigger 
-                          key={sec.id} 
+                        <TabsTrigger
+                          key={sec.id}
                           value={sec.id}
                           className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none font-mono text-xs"
                         >
                           <Icon className="w-3 h-3 mr-2" />
                           {sec.label}
                         </TabsTrigger>
-                      )
+                      );
                     })}
                   </TabsList>
                 </div>
-                
                 <div className="p-6 min-h-[400px] max-h-[600px] overflow-y-auto custom-scrollbar">
                   {sections.map((sec) => (
                     <TabsContent key={sec.id} value={sec.id} className="m-0 animate-in fade-in duration-300">
@@ -198,8 +205,52 @@ export default function BusinessPlan() {
             </Card>
           )}
         </div>
-
       </div>
+
+      {/* Hidden print-ready view — all sections stacked, captured for PDF */}
+      {results && (
+        <div
+          ref={printRef}
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            top: 0,
+            width: "794px",
+            backgroundColor: "#080F14",
+            color: "#BDB7C3",
+            padding: "40px",
+            fontFamily: "sans-serif",
+          }}
+        >
+          <div style={{ marginBottom: "32px", borderBottom: "1px solid #1E2730", paddingBottom: "16px" }}>
+            <div style={{ color: "#00D1FF", fontSize: "22px", fontWeight: "bold", letterSpacing: "2px" }}>
+              A2G STACK3 — BUSINESS PLAN
+            </div>
+            <div style={{ color: "#5A6470", fontSize: "12px", marginTop: "4px" }}>
+              {form.getValues("projectName")} · Generated {new Date().toLocaleDateString()}
+            </div>
+          </div>
+          {sections.map((sec) => (
+            <div key={sec.id} style={{ marginBottom: "36px" }}>
+              <div style={{
+                color: "#00D1FF",
+                fontSize: "14px",
+                fontWeight: "bold",
+                letterSpacing: "1px",
+                textTransform: "uppercase",
+                borderBottom: "1px solid #1E2730",
+                paddingBottom: "8px",
+                marginBottom: "16px",
+              }}>
+                {sec.label}
+              </div>
+              <div style={{ fontSize: "13px", lineHeight: "1.8", color: "#BDB7C3", whiteSpace: "pre-wrap" }}>
+                {results[sec.id] || `No data generated for ${sec.label}`}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

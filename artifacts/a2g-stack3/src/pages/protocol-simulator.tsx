@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { MermaidChart } from "@/components/mermaid-chart";
-import { Terminal, Cpu, Network, Zap } from "lucide-react";
+import { Terminal, Cpu, Network, Zap, Download, Loader2 } from "lucide-react";
+import { exportToPdf } from "@/lib/export-pdf";
 
-// Mock data for chart
 const generateData = () => {
   const data = [];
   let value = 1000;
@@ -43,6 +44,8 @@ graph TD
 export default function ProtocolSim() {
   const [data, setData] = useState(generateData());
   const [isRunning, setIsRunning] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -61,25 +64,57 @@ export default function ProtocolSim() {
     return () => clearInterval(interval);
   }, [isRunning]);
 
+  async function handleExport() {
+    if (!contentRef.current) return;
+    setIsExporting(true);
+    const wasRunning = isRunning;
+    setIsRunning(false);
+    await new Promise(r => setTimeout(r, 300));
+    try {
+      await exportToPdf(contentRef.current, `A2G_ProtocolSim_${new Date().toISOString().slice(0, 10)}`);
+    } finally {
+      setIsExporting(false);
+      if (wasRunning) setIsRunning(true);
+    }
+  }
+
+  const lastDataPoint = data[data.length - 1];
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
-      
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">PROTOCOL_SIMULATOR</h1>
           <p className="font-mono text-sm text-muted-foreground">OVP / PoV Network Telemetry</p>
         </div>
-        <div className="flex gap-2">
-          <Badge variant={isRunning ? "default" : "outline"} className={`font-mono ${isRunning ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/30' : ''}`} onClick={() => setIsRunning(!isRunning)}>
+        <div className="flex gap-2 items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-mono text-xs border-primary/50 text-primary hover:bg-primary/10"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            {isExporting
+              ? <><Loader2 className="w-3 h-3 mr-2 animate-spin" />EXPORTING...</>
+              : <><Download className="w-3 h-3 mr-2" />EXPORT_PDF</>
+            }
+          </Button>
+          <Badge
+            variant={isRunning ? "default" : "outline"}
+            className={`font-mono cursor-pointer ${isRunning ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/30' : ''}`}
+            onClick={() => setIsRunning(!isRunning)}
+          >
             <div className={`w-2 h-2 rounded-full mr-2 ${isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-muted-foreground'}`}></div>
             {isRunning ? 'SIMULATION_ACTIVE' : 'SIMULATION_PAUSED'}
           </Badge>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Col - Stats & Terminal */}
+      <div ref={contentRef} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Left Col */}
         <div className="space-y-6">
           <Card className="bg-card/50 backdrop-blur border-border/50">
             <CardHeader className="pb-2">
@@ -90,15 +125,15 @@ export default function ProtocolSim() {
             <CardContent className="space-y-4">
               <div>
                 <p className="text-xs font-mono text-muted-foreground mb-1">EPOCH</p>
-                <p className="text-xl font-display text-primary">{data[data.length-1]?.time}</p>
+                <p className="text-xl font-display text-primary">{lastDataPoint?.time}</p>
               </div>
               <div>
                 <p className="text-xs font-mono text-muted-foreground mb-1">SIMULATED_TVL</p>
-                <p className="text-xl font-display text-emerald-400">${data[data.length-1]?.tvl.toFixed(2)}M</p>
+                <p className="text-xl font-display text-emerald-400">${lastDataPoint?.tvl.toFixed(2)}M</p>
               </div>
               <div>
                 <p className="text-xs font-mono text-muted-foreground mb-1">TOKEN_PRICE</p>
-                <p className="text-xl font-display text-primary">${data[data.length-1]?.price.toFixed(2)}</p>
+                <p className="text-xl font-display text-primary">${lastDataPoint?.price.toFixed(2)}</p>
               </div>
             </CardContent>
           </Card>
@@ -119,14 +154,13 @@ export default function ProtocolSim() {
               <div className="text-primary">[AGENT:Tokenomics] Yield emission rate: optimal</div>
               <div className="text-emerald-400">[PoV] Consensus reached for block 8493</div>
               <div className="flex gap-2 mt-2 animate-pulse text-primary/70">
-                <span>{">"}</span>
-                <span>_</span>
+                <span>{">"}</span><span>_</span>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Right Col - Charts & Diagram */}
+        {/* Right Col */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="bg-card/50 backdrop-blur border-border/50">
             <CardHeader>
@@ -140,18 +174,18 @@ export default function ProtocolSim() {
                   <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#00D1FF" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#00D1FF" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#00D1FF" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#00D1FF" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorTvl" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#3A3F45" vertical={false} />
                     <XAxis dataKey="time" stroke="#BDB7C3" fontSize={10} tickLine={false} axisLine={false} />
                     <YAxis stroke="#BDB7C3" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{ backgroundColor: '#0A121A', borderColor: '#3A3F45', fontFamily: 'JetBrains Mono', fontSize: '12px' }}
                       itemStyle={{ color: '#00D1FF' }}
                     />

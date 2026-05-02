@@ -5,9 +5,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, ArrowLeft, Terminal } from "lucide-react";
+import { Send, ArrowLeft, Terminal, Download } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { exportToPdf } from "@/lib/export-pdf";
 
 interface Message {
   role: 'user' | 'model';
@@ -21,7 +22,9 @@ export default function AgentChat() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -66,11 +69,11 @@ export default function AgentChat() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n\n');
         buffer = lines.pop() || '';
-        
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             try {
@@ -90,23 +93,32 @@ export default function AgentChat() {
           }
         }
       }
-      
-      // Safety catch in case 'done' event was missed
+
       if (fullContent && isTyping) {
-         setMessages(prev => [...prev, { role: 'model', content: fullContent }]);
-         setStreamingContent("");
-         setIsTyping(false);
+        setMessages(prev => [...prev, { role: 'model', content: fullContent }]);
+        setStreamingContent("");
+        setIsTyping(false);
       }
-      
+
     } catch (error) {
       console.error("Chat error:", error);
       setIsTyping(false);
     }
   };
 
+  async function handleExport() {
+    if (!printRef.current || messages.length === 0) return;
+    setIsExporting(true);
+    try {
+      await exportToPdf(printRef.current, `A2G_Chat_${agent.id}_${Date.now()}`);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-6rem)] gap-4 animate-in fade-in duration-500">
-      
+
       {/* Left Sidebar - Agent Info */}
       <div className="w-full md:w-64 lg:w-80 flex flex-col gap-4">
         <Card className={`bg-card/40 backdrop-blur border p-4 ${getAgentColorClass(agent.color)}`}>
@@ -129,6 +141,18 @@ export default function AgentChat() {
               <span className="text-xs font-mono">{agent.status}</span>
             </div>
           </div>
+          {messages.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-4 font-mono text-xs border-primary/40 text-primary hover:bg-primary/10"
+              onClick={handleExport}
+              disabled={isExporting}
+            >
+              <Download className="w-3 h-3 mr-2" />
+              {isExporting ? "EXPORTING..." : "EXPORT_PDF"}
+            </Button>
+          )}
         </Card>
       </div>
 
@@ -138,7 +162,7 @@ export default function AgentChat() {
           <Terminal className="w-4 h-4 text-primary mr-2" />
           <span className="text-xs font-mono text-muted-foreground">SECURE_CHANNEL_ESTABLISHED // {agent.id}</span>
         </div>
-        
+
         <ScrollArea className="flex-1 p-4" ref={scrollRef}>
           <div className="space-y-4 pb-4">
             {messages.length === 0 && (
@@ -146,12 +170,12 @@ export default function AgentChat() {
                 Initiate connection with {agent.name}...
               </div>
             )}
-            
+
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] rounded-lg p-3 ${
-                  msg.role === 'user' 
-                    ? 'bg-primary/20 border border-primary/30 text-foreground' 
+                  msg.role === 'user'
+                    ? 'bg-primary/20 border border-primary/30 text-foreground'
                     : 'bg-muted/30 border border-border/50 text-foreground prose prose-invert max-w-none'
                 }`}>
                   {msg.role === 'user' ? (
@@ -166,7 +190,7 @@ export default function AgentChat() {
                 </div>
               </div>
             ))}
-            
+
             {streamingContent && (
               <div className="flex justify-start">
                 <div className="max-w-[85%] rounded-lg p-3 bg-muted/30 border border-border/50 text-foreground prose prose-invert max-w-none">
@@ -179,7 +203,7 @@ export default function AgentChat() {
                 </div>
               </div>
             )}
-            
+
             {isTyping && !streamingContent && (
               <div className="flex justify-start">
                 <div className="rounded-lg p-3 bg-muted/30 border border-border/50 text-foreground flex gap-1 items-center h-10">
@@ -194,16 +218,16 @@ export default function AgentChat() {
 
         <div className="p-4 border-t border-border/50 bg-background/50">
           <form onSubmit={handleSend} className="flex gap-2">
-            <Input 
+            <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Enter transmission..." 
+              placeholder="Enter transmission..."
               className="font-mono bg-input/50 border-border focus-visible:ring-primary focus-visible:border-primary"
               disabled={isTyping || agent.status === 'OFFLINE'}
             />
-            <Button 
-              type="submit" 
-              size="icon" 
+            <Button
+              type="submit"
+              size="icon"
               className="bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={!input.trim() || isTyping || agent.status === 'OFFLINE'}
             >
@@ -212,7 +236,56 @@ export default function AgentChat() {
           </form>
         </div>
       </Card>
-      
+
+      {/* Hidden print view for PDF export */}
+      <div
+        ref={printRef}
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          top: 0,
+          width: "794px",
+          backgroundColor: "#080F14",
+          color: "#BDB7C3",
+          padding: "40px",
+          fontFamily: "sans-serif",
+        }}
+      >
+        <div style={{ marginBottom: "24px", borderBottom: "1px solid #1E2730", paddingBottom: "16px" }}>
+          <div style={{ color: "#00D1FF", fontSize: "20px", fontWeight: "bold", letterSpacing: "2px" }}>
+            A2G STACK3 — AGENT TRANSCRIPT
+          </div>
+          <div style={{ color: "#5A6470", fontSize: "12px", marginTop: "4px" }}>
+            {agent.name} ({agent.role}) · {new Date().toLocaleString()}
+          </div>
+        </div>
+        {messages.map((msg, i) => (
+          <div key={i} style={{ marginBottom: "20px" }}>
+            <div style={{
+              fontSize: "10px",
+              fontWeight: "bold",
+              color: msg.role === 'user' ? "#00D1FF" : "#8b5cf6",
+              letterSpacing: "1px",
+              marginBottom: "6px",
+              textTransform: "uppercase",
+            }}>
+              {msg.role === 'user' ? 'USER' : agent.name}
+            </div>
+            <div style={{
+              fontSize: "13px",
+              lineHeight: "1.7",
+              color: "#BDB7C3",
+              backgroundColor: msg.role === 'user' ? "#0A1A24" : "#0A121A",
+              border: `1px solid ${msg.role === 'user' ? '#003B52' : '#1E2730'}`,
+              borderRadius: "6px",
+              padding: "12px 16px",
+              whiteSpace: "pre-wrap",
+            }}>
+              {msg.content}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
