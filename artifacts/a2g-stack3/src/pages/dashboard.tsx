@@ -8,13 +8,16 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Activity, Server, Database, Shield, Zap, Download, Loader2,
-  ChevronDown, ChevronUp, FileText, MessageSquare, CheckCircle2,
+  ChevronDown, ChevronUp, FileText, MessageSquare, CheckCircle2, Rocket,
 } from "lucide-react";
 import { useProject } from "@/context/project-context";
 import { exportAgentPdf, exportExecutiveReport } from "@/lib/export-pdf";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { OnboardingWizard } from "@/components/onboarding-wizard";
+
+const WIZARD_KEY = "a2g_wizard_dismissed";
 
 const KEY_AGENT_IDS = ["1", "2", "3", "4", "5", "6", "7", "9", "10", "13", "14", "21"];
 
@@ -43,11 +46,19 @@ export default function Dashboard() {
   const [expandedAgentId, setExpandedAgentId] = useState<string | null>(null);
   const [exportingAgentId, setExportingAgentId] = useState<string | null>(null);
   const [exportingReport, setExportingReport] = useState(false);
+  const [showWizard, setShowWizard] = useState(() => {
+    return activationState === "idle" && !localStorage.getItem(WIZARD_KEY);
+  });
   const [logs, setLogs] = useState<string[]>([
     "[SYSTEM] A2G STACK3 Initialized.",
     "[NETWORK] Connection established to Ethereum Mainnet.",
     "[AGENTS] 23 agents loaded and ready.",
   ]);
+
+  function dismissWizard() {
+    localStorage.setItem(WIZARD_KEY, "1");
+    setShowWizard(false);
+  }
 
   const onlineCount = AGENTS.filter(a => a.status === "ONLINE").length;
   const doneCount = KEY_AGENT_IDS.filter(id => agentOutputs[id]?.status === "done").length;
@@ -180,6 +191,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 flex flex-col h-full animate-in fade-in duration-500">
+
+      {/* Onboarding Wizard overlay */}
+      {showWizard && <OnboardingWizard onDismiss={dismissWizard} />}
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
