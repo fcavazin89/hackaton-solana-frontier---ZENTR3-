@@ -77,7 +77,7 @@ function addFooter(doc: jsPDF, page: number, total: number, project: string): vo
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   fg(doc, MUTED);
-  doc.text("A2G STACK3 · Powered by Gemini AI", MARGIN, FOOTER_Y + 6);
+  doc.text("Spr1nt3 · Powered by Gemini AI", MARGIN, FOOTER_Y + 6);
   doc.text(project, PAGE_W / 2, FOOTER_Y + 6, { align: "center" });
   doc.text(`${page} / ${total}`, PAGE_W - MARGIN, FOOTER_Y + 6, { align: "right" });
 }
@@ -107,7 +107,7 @@ function drawCover(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   fg(doc, accentColor);
-  doc.text("A2G STACK3", MARGIN + 8, 60);
+  doc.text("Spr1nt3", MARGIN + 8, 60);
 
   doc.setFontSize(20);
   fg(doc, WHITE);
@@ -247,7 +247,7 @@ export async function exportBusinessPlanPdf(plan: BusinessPlanData): Promise<voi
     addFooter(doc, i - 1, total - 1, plan.projectName);
   }
 
-  doc.save(`A2G_BusinessPlan_${plan.projectName.replace(/\s+/g, "_")}.pdf`);
+  doc.save(`Spr1nt3_BusinessPlan_${plan.projectName.replace(/\s+/g, "_")}.pdf`);
 }
 
 export async function exportAgentPdf(agent: Agent, output: AgentOutput, projectName: string): Promise<void> {
@@ -284,7 +284,7 @@ export async function exportAgentPdf(agent: Agent, output: AgentOutput, projectN
     addFooter(doc, i - 1, total - 1, projectName);
   }
 
-  doc.save(`A2G_${agent.name.replace(/\s+/g, "_")}_${projectName.replace(/\s+/g, "_")}.pdf`);
+  doc.save(`Spr1nt3_${agent.name.replace(/\s+/g, "_")}_${projectName.replace(/\s+/g, "_")}.pdf`);
 }
 
 export async function exportExecutiveReport(
@@ -363,7 +363,7 @@ export async function exportExecutiveReport(
     addFooter(doc, i - 1, total - 1, plan.projectName);
   }
 
-  doc.save(`A2G_Executive_Report_${plan.projectName.replace(/\s+/g, "_")}.pdf`);
+  doc.save(`Spr1nt3_Executive_Report_${plan.projectName.replace(/\s+/g, "_")}.pdf`);
 }
 
 export async function exportChatTranscript(
@@ -374,7 +374,7 @@ export async function exportChatTranscript(
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const ac = AGENT_ACCENT[agent.color] || CYAN;
 
-  drawCover(doc, agent.name, "Agent Conversation Transcript", projectName || "A2G STACK3", agent.description, ac);
+  drawCover(doc, agent.name, "Agent Conversation Transcript", projectName || "Spr1nt3", agent.description, ac);
 
   let y = addNewPage(doc);
   y = drawSectionHeader(doc, "Conversation Transcript", y, ac);
@@ -405,7 +405,7 @@ export async function exportChatTranscript(
     addFooter(doc, i - 1, total - 1, agent.name);
   }
 
-  doc.save(`A2G_Chat_${agent.name.replace(/\s+/g, "_")}.pdf`);
+  doc.save(`Spr1nt3_Chat_${agent.name.replace(/\s+/g, "_")}.pdf`);
 }
 
 export async function exportTaskBoardPdf(
@@ -425,7 +425,7 @@ export async function exportTaskBoardPdf(
     HIGH: ROSE, MEDIUM: AMBER, LOW: EMERALD,
   };
 
-  drawCover(doc, "TASK BOARD", `Project Management Overview — ${tasks.length} tasks`, projectName || "A2G STACK3", undefined);
+  drawCover(doc, "TASK BOARD", `Project Management Overview — ${tasks.length} tasks`, projectName || "Spr1nt3", undefined);
 
   let y = addNewPage(doc);
   y = drawSectionHeader(doc, `All Tasks (${tasks.length})`, y, CYAN);
@@ -492,10 +492,10 @@ export async function exportTaskBoardPdf(
   const total = doc.getNumberOfPages();
   for (let i = 2; i <= total; i++) {
     doc.setPage(i);
-    addFooter(doc, i - 1, total - 1, projectName || "A2G STACK3");
+    addFooter(doc, i - 1, total - 1, projectName || "Spr1nt3");
   }
 
-  doc.save(`A2G_TaskBoard_${(projectName || "export").replace(/\s+/g, "_")}.pdf`);
+  doc.save(`Spr1nt3_TaskBoard_${(projectName || "export").replace(/\s+/g, "_")}.pdf`);
 }
 
 export async function exportProtocolSimPdf(
@@ -575,5 +575,5 @@ export async function exportProtocolSimPdf(
     addFooter(doc, i - 1, total - 1, projectName || tokenSymbol);
   }
 
-  doc.save(`A2G_ProtocolSim_${(projectName || tokenSymbol).replace(/\s+/g, "_")}.pdf`);
+  doc.save(`Spr1nt3_ProtocolSim_${(projectName || tokenSymbol).replace(/\s+/g, "_")}.pdf`);
 }

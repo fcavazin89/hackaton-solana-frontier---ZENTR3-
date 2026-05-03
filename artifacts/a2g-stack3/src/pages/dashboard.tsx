@@ -50,7 +50,7 @@ export default function Dashboard() {
     return activationState === "idle" && !localStorage.getItem(WIZARD_KEY);
   });
   const [logs, setLogs] = useState<string[]>([
-    "[SYSTEM] A2G STACK3 Initialized.",
+    "[SYSTEM] Spr1nt3 Initialized.",
     "[NETWORK] Connection established to Ethereum Mainnet.",
     "[AGENTS] 23 agents loaded and ready.",
   ]);

@@ -9,6 +9,8 @@ import AgentChat from "@/pages/agent-chat";
 import BusinessPlan from "@/pages/business-plan";
 import TaskBoard from "@/pages/task-board";
 import ProtocolSim from "@/pages/protocol-simulator";
+import SprintBoard from "@/pages/sprint-board";
+import Roadmap from "@/pages/roadmap";
 import { ProjectProvider } from "@/context/project-context";
 
 const queryClient = new QueryClient();
@@ -21,6 +23,8 @@ function Router() {
         <Route path="/agent/:id" component={AgentChat} />
         <Route path="/plan" component={BusinessPlan} />
         <Route path="/tasks" component={TaskBoard} />
+        <Route path="/sprint" component={SprintBoard} />
+        <Route path="/roadmap" component={Roadmap} />
         <Route path="/protocol" component={ProtocolSim} />
         <Route component={NotFound} />
       </Switch>

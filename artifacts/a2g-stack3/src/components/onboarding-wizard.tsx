@@ -130,7 +130,7 @@ export function OnboardingWizard({ onDismiss }: OnboardingWizardProps) {
               </div>
 
               <p className="text-muted-foreground mb-6 leading-relaxed">
-                A2G STACK3 is your multi-agent Web3 command center. Give your project a name and we'll guide the AI agents to do the heavy lifting — business planning, architecture, legal, tokenomics, marketing, and more.
+                Spr1nt3 is your multi-agent Web3 command center. Give your project a name and we'll guide the AI agents to do the heavy lifting — business planning, architecture, legal, tokenomics, marketing, and more.
               </p>
 
               <div className="space-y-4">

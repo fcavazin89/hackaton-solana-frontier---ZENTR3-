@@ -16,7 +16,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AGENTS } from "@/lib/agents";
 import { exportBusinessPlanPdf } from "@/lib/export-pdf";
-import { useProject, createTasksFromPlan } from "@/context/project-context";
+import { useProject, createTasksFromPlan, createSprintsFromPlan, createRoadmapFromPlan } from "@/context/project-context";
 
 const formSchema = z.object({
   projectName: z.string().min(2, "Project name is required"),
@@ -26,7 +26,7 @@ const formSchema = z.object({
 export default function BusinessPlan() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const { setBusinessPlan, setTasks, setActivationState } = useProject();
+  const { setBusinessPlan, setTasks, setSprints, setRoadmapPhases, setActivationState } = useProject();
   const generatePlanMutation = useGeneratePlan();
   const [results, setResults] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -55,6 +55,8 @@ export default function BusinessPlan() {
 
         setBusinessPlan(planData);
         setTasks(createTasksFromPlan(planData));
+        setSprints(createSprintsFromPlan(planData));
+        setRoadmapPhases(createRoadmapFromPlan(planData));
         setActivationState("ready");
         setPlanReady(true);
 

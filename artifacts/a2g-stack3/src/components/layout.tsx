@@ -1,6 +1,9 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Terminal, LayoutDashboard, MessageSquare, ClipboardList, Activity, LayoutTemplate } from "lucide-react";
+import {
+  Terminal, LayoutDashboard, ClipboardList, Activity,
+  LayoutTemplate, Flame, Map,
+} from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,10 +13,12 @@ export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
 
   const navItems = [
-    { href: "/", label: "COMMAND CENTER", icon: LayoutDashboard },
-    { href: "/tasks", label: "TASK BOARD", icon: ClipboardList },
-    { href: "/plan", label: "BUSINESS PLAN", icon: LayoutTemplate },
-    { href: "/protocol", label: "PROTOCOL SIM", icon: Activity },
+    { href: "/",        label: "COMMAND",   icon: LayoutDashboard },
+    { href: "/plan",    label: "PLAN",      icon: LayoutTemplate  },
+    { href: "/tasks",   label: "TASKS",     icon: ClipboardList   },
+    { href: "/sprint",  label: "SPRINT",    icon: Flame           },
+    { href: "/roadmap", label: "ROADMAP",   icon: Map             },
+    { href: "/protocol",label: "PROTOCOL",  icon: Activity        },
   ];
 
   return (
@@ -21,24 +26,24 @@ export function Layout({ children }: LayoutProps) {
       <header className="h-14 border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-50 flex items-center justify-between px-6">
         <div className="flex items-center gap-2">
           <Terminal className="w-5 h-5 text-primary" />
-          <span className="font-display font-bold tracking-wider text-primary neon-text">A2G STACK3</span>
-          <span className="text-xs font-mono text-muted-foreground ml-2 border border-border/50 px-1.5 py-0.5 rounded bg-muted/30">v1.0.0</span>
+          <span className="font-display font-bold tracking-wider text-primary neon-text">Spr1nt3</span>
+          <span className="text-xs font-mono text-muted-foreground ml-2 border border-border/50 px-1.5 py-0.5 rounded bg-muted/30">v2.0.0</span>
         </div>
-        
-        <nav className="flex items-center gap-1">
+
+        <nav className="flex items-center gap-1 overflow-x-auto">
           {navItems.map((item) => {
             const isActive = location === item.href;
             return (
-              <Link 
-                key={item.href} 
+              <Link
+                key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-mono transition-colors ${
-                  isActive 
-                    ? "bg-primary/10 text-primary neon-border" 
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors whitespace-nowrap ${
+                  isActive
+                    ? "bg-primary/10 text-primary neon-border"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
-                <item.icon className="w-4 h-4" />
+                <item.icon className="w-3.5 h-3.5" />
                 <span>{item.label}</span>
               </Link>
             );
