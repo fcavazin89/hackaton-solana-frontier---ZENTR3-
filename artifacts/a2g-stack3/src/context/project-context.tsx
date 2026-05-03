@@ -26,6 +26,7 @@ export interface AgentOutput {
   agentId: string;
   content: string;
   status: 'pending' | 'generating' | 'done' | 'error';
+  active?: boolean;
 }
 
 interface ProjectContextType {
@@ -33,6 +34,7 @@ interface ProjectContextType {
   setBusinessPlan: (plan: BusinessPlanData) => void;
   agentOutputs: Record<string, AgentOutput>;
   setAgentOutput: (agentId: string, output: AgentOutput) => void;
+  setAgentActive: (agentId: string, active: boolean) => void;
   tasks: ProjectTask[];
   setTasks: (tasks: ProjectTask[]) => void;
   activationState: ActivationState;
@@ -71,6 +73,18 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setAgentOutputsState(prev => ({ ...prev, [agentId]: output }));
   };
 
+  const setAgentActive = (agentId: string, active: boolean) => {
+    setAgentOutputsState(prev => ({
+      ...prev,
+      [agentId]: {
+        agentId,
+        content: prev[agentId]?.content || "",
+        status: prev[agentId]?.status || "pending",
+        active,
+      },
+    }));
+  };
+
   const resetProject = () => {
     setBusinessPlanState(null);
     setAgentOutputsState({});
@@ -82,6 +96,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     <ProjectContext.Provider value={{
       businessPlan, setBusinessPlan,
       agentOutputs, setAgentOutput,
+      setAgentActive,
       tasks, setTasks,
       activationState, setActivationState,
       resetProject,

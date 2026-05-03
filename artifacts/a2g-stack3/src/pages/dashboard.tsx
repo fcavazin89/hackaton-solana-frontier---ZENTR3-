@@ -40,7 +40,7 @@ const AGENT_PROMPTS: Record<string, string> = {
 };
 
 export default function Dashboard() {
-  const { businessPlan, agentOutputs, setAgentOutput, activationState, setActivationState } = useProject();
+  const { businessPlan, agentOutputs, setAgentOutput, setAgentActive, activationState, setActivationState } = useProject();
   const { toast } = useToast();
 
   const [expandedAgentId, setExpandedAgentId] = useState<string | null>(null);
@@ -188,6 +188,17 @@ export default function Dashboard() {
 
   const keyAgents = AGENTS.filter(a => KEY_AGENT_IDS.includes(a.id));
   const standbyAgents = AGENTS.filter(a => !KEY_AGENT_IDS.includes(a.id));
+  const maturityScore = KEY_AGENT_IDS.reduce((score, id) => {
+    const output = agentOutputs[id];
+    if (!output) return score;
+    if (output.status === "done") return score + 2;
+    if (output.status === "generating") return score + 1;
+    if (output.status === "error") return score;
+    return score;
+  }, 0);
+  const maturityBlocks = Math.max(6, KEY_AGENT_IDS.length);
+  const maturityFilled = Math.min(maturityBlocks, Math.round((maturityScore / (KEY_AGENT_IDS.length * 2)) * maturityBlocks));
+  const maturityLabel = maturityFilled >= 5 ? "MATURE" : maturityFilled >= 3 ? "EVOLVING" : "EARLY";
 
   return (
     <div className="space-y-6 flex flex-col h-full animate-in fade-in duration-500">
@@ -234,6 +245,35 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* LEGO maturity map */}
+      <Card className="bg-card/50 backdrop-blur border-border/50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="font-display text-sm text-muted-foreground">PROJECT MATURITY MAP</p>
+              <p className="text-xs font-mono text-muted-foreground">Baseado no estado dos agentes e resultados gerados</p>
+            </div>
+            <Badge className="font-mono bg-primary/20 text-primary border border-primary/40">{maturityLabel}</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: maturityBlocks }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-6 w-10 rounded-md border ${i < maturityFilled ? "bg-primary border-primary/60 shadow-[0_0_18px_rgba(0,209,255,0.18)]" : "bg-muted/20 border-border/60"}`}
+              />
+            ))}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono text-muted-foreground">
+            <div>DONE: {doneCount}</div>
+            <div>GENERATING: {Object.values(agentOutputs).filter(o => o.status === "generating").length}</div>
+            <div>PENDING: {KEY_AGENT_IDS.length - doneCount - Object.values(agentOutputs).filter(o => o.status === "generating").length}</div>
+            <div>SCORE: {Math.round((maturityFilled / maturityBlocks) * 100)}%</div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* READY state: activation CTA */}
       {activationState === "ready" && businessPlan && (
@@ -458,6 +498,32 @@ export default function Dashboard() {
                     <p className="text-xs font-mono text-muted-foreground truncate">{agent.role}</p>
                   </div>
                   <p className="text-xs text-muted-foreground/80 line-clamp-2">{agent.description}</p>
+                  <div className="flex gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-[10px] font-mono flex-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setAgentActive(agent.id, true);
+                      }}
+                    >
+                      LIGAR
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-[10px] font-mono flex-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setAgentActive(agent.id, false);
+                      }}
+                    >
+                      DESLIGAR
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </Link>
