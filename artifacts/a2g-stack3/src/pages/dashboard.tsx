@@ -437,6 +437,9 @@ export default function Dashboard() {
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
           {isActive ? "STANDBY AGENTS" : "AGENT DEPLOYMENT GRID"}
         </h2>
+        <p className="mb-3 text-xs font-mono text-muted-foreground">
+          ONLINE = disponível · OFFLINE = standby/inativo
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {(isActive ? standbyAgents : AGENTS).map((agent) => (
             <Link key={agent.id} href={`/agent/${agent.id}`}>
