@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AGENTS } from "@/lib/agents";
-import { exportToPdf } from "@/lib/export-pdf";
+import { exportBusinessPlanPdf } from "@/lib/export-pdf";
 import { useProject, createTasksFromPlan } from "@/context/project-context";
 
 const formSchema = z.object({
@@ -31,7 +31,6 @@ export default function BusinessPlan() {
   const [results, setResults] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [planReady, setPlanReady] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -68,11 +67,19 @@ export default function BusinessPlan() {
   }
 
   async function handleExport() {
-    if (!printRef.current) return;
+    if (!results) return;
     setIsExporting(true);
     try {
-      const projectName = form.getValues("projectName") || "business-plan";
-      await exportToPdf(printRef.current, `A2G_${projectName.replace(/\s+/g, "_")}`);
+      const values = form.getValues();
+      await exportBusinessPlanPdf({
+        projectName: values.projectName || "A2G Project",
+        description: values.description || "",
+        research:      results.research      || "",
+        tokenomics:    results.tokenomics    || "",
+        architecture:  results.architecture  || "",
+        gtm:           results.gtm           || "",
+        compliance:    results.compliance    || "",
+      });
     } finally {
       setIsExporting(false);
     }
@@ -245,25 +252,6 @@ export default function BusinessPlan() {
         </div>
       </div>
 
-      {/* Hidden print view — all sections for PDF */}
-      {results && (
-        <div ref={printRef} style={{ position: "absolute", left: "-9999px", top: 0, width: "794px", backgroundColor: "#080F14", color: "#BDB7C3", padding: "40px", fontFamily: "sans-serif" }}>
-          <div style={{ marginBottom: "32px", borderBottom: "1px solid #1E2730", paddingBottom: "16px" }}>
-            <div style={{ color: "#00D1FF", fontSize: "22px", fontWeight: "bold", letterSpacing: "2px" }}>A2G STACK3 — BUSINESS PLAN</div>
-            <div style={{ color: "#5A6470", fontSize: "12px", marginTop: "4px" }}>{form.getValues("projectName")} · Generated {new Date().toLocaleDateString()}</div>
-          </div>
-          {sections.map((sec) => (
-            <div key={sec.id} style={{ marginBottom: "36px" }}>
-              <div style={{ color: "#00D1FF", fontSize: "14px", fontWeight: "bold", letterSpacing: "1px", textTransform: "uppercase", borderBottom: "1px solid #1E2730", paddingBottom: "8px", marginBottom: "16px" }}>
-                {sec.label}
-              </div>
-              <div style={{ fontSize: "13px", lineHeight: "1.8", color: "#BDB7C3", whiteSpace: "pre-wrap" }}>
-                {results[sec.id] || `No data generated for ${sec.label}`}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

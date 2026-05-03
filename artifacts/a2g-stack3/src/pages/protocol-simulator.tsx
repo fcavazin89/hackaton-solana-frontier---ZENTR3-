@@ -1,11 +1,11 @@
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { MermaidChart } from "@/components/mermaid-chart";
 import { Terminal, Cpu, Network, Zap, Download, Loader2 } from "lucide-react";
-import { exportToPdf } from "@/lib/export-pdf";
+import { exportProtocolSimPdf } from "@/lib/export-pdf";
 import { useProject } from "@/context/project-context";
 
 function seedFromString(str: string): number {
@@ -46,7 +46,6 @@ export default function ProtocolSim() {
   const [data, setData] = useState(() => generateData(seed, initPrice, initTvl));
   const [isRunning, setIsRunning] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setData(generateData(seed, initPrice, initTvl));
@@ -73,14 +72,11 @@ export default function ProtocolSim() {
   }, [isRunning]);
 
   async function handleExport() {
-    if (!contentRef.current) return;
     setIsExporting(true);
     const wasRunning = isRunning;
     setIsRunning(false);
-    await new Promise(r => setTimeout(r, 300));
     try {
-      const name = businessPlan?.projectName || "Protocol";
-      await exportToPdf(contentRef.current, `A2G_ProtocolSim_${name.replace(/\s+/g, "_")}`);
+      await exportProtocolSimPdf(data, tokenSymbol, businessPlan?.projectName || "");
     } finally {
       setIsExporting(false);
       if (wasRunning) setIsRunning(true);
@@ -157,7 +153,7 @@ graph TD
         </div>
       </div>
 
-      <div ref={contentRef} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="space-y-6">
           <Card className="bg-card/50 backdrop-blur border-border/50">
             <CardHeader className="pb-2">

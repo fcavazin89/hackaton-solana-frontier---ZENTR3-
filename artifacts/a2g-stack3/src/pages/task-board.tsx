@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Plus, GripVertical, Clock, CheckCircle2, XCircle, Download, Loader2 } from "lucide-react";
 import { Activity } from "lucide-react";
 import { AGENTS } from "@/lib/agents";
-import { exportToPdf } from "@/lib/export-pdf";
+import { exportTaskBoardPdf } from "@/lib/export-pdf";
 import { useProject, ProjectTask } from "@/context/project-context";
 
 const MOCK_TASKS: ProjectTask[] = [
@@ -32,7 +32,6 @@ export default function TaskBoard() {
   const activeTasks = contextTasks.length > 0 ? contextTasks : MOCK_TASKS;
   const [tasks, setTasks] = useState<ProjectTask[]>(activeTasks);
   const [isExporting, setIsExporting] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -52,11 +51,9 @@ export default function TaskBoard() {
   };
 
   async function handleExport() {
-    if (!printRef.current) return;
     setIsExporting(true);
     try {
-      const name = businessPlan?.projectName || "TaskBoard";
-      await exportToPdf(printRef.current, `A2G_Tasks_${name.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}`);
+      await exportTaskBoardPdf(tasks, AGENTS, businessPlan?.projectName || "");
     } finally {
       setIsExporting(false);
     }
@@ -156,42 +153,6 @@ export default function TaskBoard() {
         ))}
       </div>
 
-      {/* Hidden print view */}
-      <div ref={printRef} style={{ position: "absolute", left: "-9999px", top: 0, width: "794px", backgroundColor: "#080F14", color: "#BDB7C3", padding: "40px", fontFamily: "sans-serif" }}>
-        <div style={{ marginBottom: "24px", borderBottom: "1px solid #1E2730", paddingBottom: "16px" }}>
-          <div style={{ color: "#00D1FF", fontSize: "20px", fontWeight: "bold", letterSpacing: "2px" }}>A2G STACK3 — TASK BOARD</div>
-          <div style={{ color: "#5A6470", fontSize: "12px", marginTop: "4px" }}>
-            {businessPlan ? `${businessPlan.projectName} · ` : ''}Exported {new Date().toLocaleString()} · {tasks.length} tasks
-          </div>
-        </div>
-        {COLUMNS.map(col => {
-          const colTasks = tasks.filter(t => t.status === col.id);
-          if (colTasks.length === 0) return null;
-          return (
-            <div key={col.id} style={{ marginBottom: "28px" }}>
-              <div style={{ fontSize: "12px", fontWeight: "bold", color: col.id === 'IN_PROGRESS' ? '#00D1FF' : col.id === 'COMPLETED' ? '#10b981' : col.id === 'FAILED' ? '#ef4444' : '#5A6470', letterSpacing: "1px", textTransform: "uppercase", marginBottom: "10px", borderBottom: "1px solid #1E2730", paddingBottom: "6px" }}>
-                {col.label} ({colTasks.length})
-              </div>
-              {colTasks.map(task => {
-                const agent = AGENTS.find(a => a.id === task.assignedTo);
-                return (
-                  <div key={task.id} style={{ backgroundColor: "#0A121A", border: "1px solid #1E2730", borderRadius: "6px", padding: "12px 16px", marginBottom: "8px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                      <span style={{ fontSize: "13px", fontWeight: "bold", color: "#E8E3EF" }}>{task.title}</span>
-                      <span style={{ fontSize: "10px", color: PRIORITY_COLORS[task.priority] || '#5A6470', fontWeight: "bold" }}>{task.priority}</span>
-                    </div>
-                    <div style={{ fontSize: "11px", color: "#5A6470", marginBottom: "4px" }}>{task.description}</div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#5A6470" }}>
-                      <span>Assigned: {agent?.name || 'Unassigned'}</span>
-                      {task.progress > 0 && <span>Progress: {task.progress}%</span>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }

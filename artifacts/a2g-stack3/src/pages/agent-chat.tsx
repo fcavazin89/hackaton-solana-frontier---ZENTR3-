@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, ArrowLeft, Terminal, Download } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { exportToPdf } from "@/lib/export-pdf";
+import { exportChatTranscript } from "@/lib/export-pdf";
 
 interface Message {
   role: 'user' | 'model';
@@ -24,7 +24,6 @@ export default function AgentChat() {
   const [streamingContent, setStreamingContent] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -107,10 +106,10 @@ export default function AgentChat() {
   };
 
   async function handleExport() {
-    if (!printRef.current || messages.length === 0) return;
+    if (!agent || messages.length === 0) return;
     setIsExporting(true);
     try {
-      await exportToPdf(printRef.current, `A2G_Chat_${agent.id}_${Date.now()}`);
+      await exportChatTranscript(agent, messages);
     } finally {
       setIsExporting(false);
     }
@@ -237,55 +236,6 @@ export default function AgentChat() {
         </div>
       </Card>
 
-      {/* Hidden print view for PDF export */}
-      <div
-        ref={printRef}
-        style={{
-          position: "absolute",
-          left: "-9999px",
-          top: 0,
-          width: "794px",
-          backgroundColor: "#080F14",
-          color: "#BDB7C3",
-          padding: "40px",
-          fontFamily: "sans-serif",
-        }}
-      >
-        <div style={{ marginBottom: "24px", borderBottom: "1px solid #1E2730", paddingBottom: "16px" }}>
-          <div style={{ color: "#00D1FF", fontSize: "20px", fontWeight: "bold", letterSpacing: "2px" }}>
-            A2G STACK3 — AGENT TRANSCRIPT
-          </div>
-          <div style={{ color: "#5A6470", fontSize: "12px", marginTop: "4px" }}>
-            {agent.name} ({agent.role}) · {new Date().toLocaleString()}
-          </div>
-        </div>
-        {messages.map((msg, i) => (
-          <div key={i} style={{ marginBottom: "20px" }}>
-            <div style={{
-              fontSize: "10px",
-              fontWeight: "bold",
-              color: msg.role === 'user' ? "#00D1FF" : "#8b5cf6",
-              letterSpacing: "1px",
-              marginBottom: "6px",
-              textTransform: "uppercase",
-            }}>
-              {msg.role === 'user' ? 'USER' : agent.name}
-            </div>
-            <div style={{
-              fontSize: "13px",
-              lineHeight: "1.7",
-              color: "#BDB7C3",
-              backgroundColor: msg.role === 'user' ? "#0A1A24" : "#0A121A",
-              border: `1px solid ${msg.role === 'user' ? '#003B52' : '#1E2730'}`,
-              borderRadius: "6px",
-              padding: "12px 16px",
-              whiteSpace: "pre-wrap",
-            }}>
-              {msg.content}
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
