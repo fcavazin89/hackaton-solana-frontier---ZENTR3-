@@ -30,7 +30,7 @@ export interface Agent {
   name: string;
   role: string;
   description: string;
-  icon: any; // LucideIcon
+  icon: any;
   color: string;
   status: AgentStatus;
   systemPrompt?: string;
@@ -40,7 +40,7 @@ export interface Agent {
 export const AGENTS: Agent[] = [
   { id: '1', name: 'Research Market', role: 'RESEARCHER', description: 'Trend Analysis & Dune Queries', icon: Search, color: 'emerald', status: 'ONLINE' },
   { id: '2', name: 'Tokenomics Design', role: 'TOKENOMICS', description: 'Sustainability & Vesting', icon: Coins, color: 'amber', status: 'ONLINE' },
-  { id: '3', name: 'Legal/Compliance', role: 'COMPLIANCE', description: 'ERC-8004 Verification', icon: ShieldCheck, color: 'rose', status: 'OFFLINE' },
+  { id: '3', name: 'Legal/Compliance', role: 'COMPLIANCE', description: 'ERC-8004 Verification', icon: ShieldCheck, color: 'rose', status: 'ONLINE' },
   { id: '4', name: 'Techno-Architect', role: 'ARCHITECT', description: 'Services & Blockchain Docs', icon: Cpu, color: 'cyan', status: 'ONLINE' },
   { id: '5', name: 'GTM Strategist', role: 'GTM', description: 'Marketing & Growth Hacking', icon: Rocket, color: 'violet', status: 'ONLINE' },
   { id: '6', name: 'Contract Forge', role: 'FORGE', description: 'Protocol Synthesis & Verification', icon: Hammer, color: 'orange', status: 'ONLINE' },
@@ -55,7 +55,7 @@ export const AGENTS: Agent[] = [
   { id: 'audit', name: 'Project Auditor', role: 'PROJECT_AUDITOR', description: 'Protocol Audit & Sign-off', icon: UserCheck, color: 'emerald', status: 'ONLINE' },
   { id: '13', name: 'Token Analyst', role: 'ANALYST', description: 'Viability, ROI & Risk Assessment', icon: TrendingUp, color: 'cyan', status: 'ONLINE' },
   { id: '14', name: 'Risk Architect', role: 'RISK', description: 'ECDM & Systemic Mitigation', icon: ShieldAlert, color: 'rose', status: 'ONLINE' },
-  { id: '15', name: 'Utility Validator', role: 'POV', description: 'PoV Consensus & Utility Flows', icon: CheckCircle, color: 'blue', status: 'OFFLINE' },
+  { id: '15', name: 'Utility Validator', role: 'POV', description: 'PoV Consensus & Utility Flows', icon: CheckCircle, color: 'blue', status: 'ONLINE' },
   { id: '16', name: 'Ontology Architect', role: 'OVP', description: 'Programmable Value Ontology', icon: Binary, color: 'purple', status: 'ONLINE' },
   { id: '17', name: 'Stress Tester', role: 'STRESS_TESTER', description: 'Protocol Resilience Testing', icon: Activity, color: 'red', status: 'ONLINE' },
   { id: '18', name: 'Meta Architect', role: 'META_ARCHITECT', description: 'Meta-Protocol Design', icon: Layers, color: 'indigo', status: 'ONLINE' },
@@ -79,5 +79,5 @@ export const getAgentColorClass = (color: string) => {
     red: 'text-red-500 border-red-500/50 hover:border-red-500 shadow-red-500/20',
     purple: 'text-purple-400 border-purple-500/50 hover:border-purple-400 shadow-purple-500/20',
   };
-  return map[color] || 'text-primary border-primary/50 hover:border-primary shadow-primary/20';
+  return map[color] || map.emerald;
 };
