@@ -153,9 +153,7 @@ Agent-Stack-Three/
 ### Database & ORM
 | Library | Version | Purpose |
 |---|---|---|
-| PostgreSQL | latest | Primary database |
-| Drizzle ORM | catalog | Type-safe ORM |
-| drizzle-zod | catalog | Schema → Zod bridge |
+| SQLlite | latest | Primary database |
 
 ### AI & Integrations
 | Library | Version | Purpose |
