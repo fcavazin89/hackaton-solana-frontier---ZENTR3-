@@ -20,7 +20,7 @@ ZENTR3 is an **Agentic Operating System** designed for non-technical Web3 founde
 | Platform | [https://app.zentr3.app](https://agent-stack-three--consultorcavazi.replit.app) |
 | Authentication | Social Login (Google or Email) |
 | Networks | Base Sepolia + Solana Testnet |
-| Support | founder@zentr3.app |
+| Support | (https://www.linkedin.com/in/tiagoferreiracavazin/) |
 
 > No external wallet (MetaMask/Phantom) required. The system auto-generates a **Smart Account (ERC-4337)** for each user.
 
