@@ -26,7 +26,7 @@ ZENTR3 is an **Agentic Operating System** designed for non-technical Web3 founde
 
 ---
 
-## 🤖 The Agent Swarm - FUTURE ROADMAP 
+## 🤖 The Agent Swarm - STACK3/SPRINT3
 
 ZENTR3 runs **25 specialized AI agents** powered by Google Gemini 2.5 Flash, each with a distinct role in the startup-building pipeline:
 
