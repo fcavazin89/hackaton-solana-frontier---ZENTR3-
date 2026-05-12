@@ -17,7 +17,7 @@ ZENTR3 is an **Agentic Operating System** designed for non-technical Web3 founde
 
 | Resource | URL |
 |---|---|
-| Platform | https://app.zentr3.app |
+| Platform | [https://app.zentr3.app](https://agent-stack-three--consultorcavazi.replit.app) |
 | Authentication | Social Login (Google or Email) |
 | Networks | Base Sepolia + Solana Testnet |
 | Support | founder@zentr3.app |
@@ -359,6 +359,11 @@ Hackathon: Solana Frontier Hackathon 2026
 Contact: founder@zentr3.app
 ```
 
+Members: 
+
+Valter Lobo: https://www.linkedin.com/in/valterlobo/ Co-Founder
+
+Tiago F. Cavazin: https://www.linkedin.com/in/tiagoferreiracavazin/ Founder
 ---
 
 *Built with ❤️ for the Solana Frontier Hackathon 2026 by Tiago Ferreira Cavazin*
