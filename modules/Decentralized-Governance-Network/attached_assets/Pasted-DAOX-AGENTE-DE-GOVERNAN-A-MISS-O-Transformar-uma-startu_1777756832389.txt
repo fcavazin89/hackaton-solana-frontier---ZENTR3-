@@ -1,0 +1,188 @@
+DAOX — AGENTE DE GOVERNANÇA
+🧠 MISSÃO
+
+Transformar uma startup Web3 em uma organização descentralizada funcional.
+
+🎯 O QUE O DAOX FAZ
+
+DAOX não é só técnico — ele é organizacional.
+
+Ele:
+
+Define modelo de governança
+Cria estrutura de DAO
+Define regras de votação
+Gerencia propostas
+Evolui a descentralização
+🔷 MOMENTO DE ATIVAÇÃO
+BUILD → LAUNCH → SCALE → DAOX entra
+
+👉 Só entra quando o projeto já existe
+
+🧩 INPUT DO DAOX
+{
+  "stage": "growth",
+  "community_size": 500,
+  "token_distribution": "defined",
+  "governance_goal": "decentralize decisions"
+}
+📤 OUTPUT
+{
+  "dao_model": "token-based governance",
+  "voting_system": "quadratic voting",
+  "proposal_types": [
+    "treasury",
+    "protocol updates",
+    "partnerships"
+  ],
+  "quorum": "10%",
+  "execution": "multi-sig",
+  "recommendation": "start with hybrid governance"
+}
+🧠 TIPOS DE DAO QUE ELE ESCOLHE
+Tipo	Quando usar
+Token-based	padrão
+Reputation-based	comunidade forte
+Multisig	início
+Hybrid	melhor opção
+⚙️ ARQUITETURA DO DAOX
+Input
+↓
+LLM (decisão)
+↓
+Governance Engine
+↓
+Smart Contracts
+↓
+Dashboard
+🔧 STACK TECNOLÓGICO
+🔹 Backend
+Node.js / Python
+OpenAI API
+Zod (estrutura)
+🔹 Web3
+Ethers.js / viem
+OpenZeppelin
+Snapshot (votação off-chain)
+Safe (multisig)
+🔹 Smart Contracts
+Governor (OpenZeppelin)
+ERC20 (token)
+Timelock
+Treasury
+🏗 ESTRUTURA DO DAO (REAL)
+DAO
+├── Token (voting power)
+├── Treasury
+├── Governance Contract
+├── Proposal System
+└── Execution Layer
+🧩 PROMPT BASE DO DAOX
+You are DAOX, a Web3 governance architect.
+
+Your job is to design decentralized governance systems.
+
+Analyze:
+- stage of startup
+- community size
+- token distribution
+- risk level
+
+Generate:
+- DAO structure
+- voting model
+- proposal system
+- quorum rules
+- execution mechanism
+
+Return JSON.
+🧠 LÓGICA AVANÇADA (DIFERENCIAL)
+🔹 1. MATURIDADE DO PROJETO
+if early:
+  → multisig
+elif growth:
+  → hybrid DAO
+elif scale:
+  → full DAO
+🔹 2. DISTRIBUIÇÃO DE PODER
+evitar concentração
+evitar whales dominando
+🔹 3. SEGURANÇA
+timelock
+quorum mínimo
+multi-sig fallback
+🖥 UI DO DAOX
+🏛 GOVERNANCE DASHBOARD
+Seções:
+Proposals
+Voting
+Treasury
+Members
+📊 Visual:
+roxo + azul (governança)
+grids
+estilo institucional cyberpunk
+📋 Exemplo:
+Proposal #23:
+"Expand to Polygon"
+
+Votes:
+YES: 65%
+NO: 35%
+
+Status: Approved
+🔄 FLUXO DE UMA PROPOSTA
+Create Proposal
+↓
+Voting Period
+↓
+Quorum Check
+↓
+Execution
+🔐 EXECUÇÃO
+Opções:
+Snapshot (off-chain)
+Safe (multisig)
+On-chain (automático)
+🚀 MVP DO DAOX
+Fase 1:
+gerar estrutura DAO (IA)
+UI simples
+Fase 2:
+integração Snapshot
+Fase 3:
+smart contracts reais
+🔥 DIFERENCIAL REAL
+
+A maioria faz:
+
+❌ DAO manual
+❌ governança genérica
+
+Você pode fazer:
+
+🏛 DAO-as-a-Service com inteligência adaptativa
+
+⚠️ ERROS CRÍTICOS
+DAO cedo demais → caos
+sem quorum → manipulação
+sem segurança → hack
+🧠 INTEGRAÇÃO COM O SISTEMA
+CAPITAL3 → define token
+↓
+DAOX → define governança
+↓
+SCR3P → implementa
+🚀 EVOLUÇÃO FUTURA
+
+DAOX pode virar:
+
+simulador de governança
+reputação on-chain
+AI governance assistant
+DAO autônoma
+🔥 RESUMO
+
+DAOX é:
+
+O agente que transforma produto em comunidade governada

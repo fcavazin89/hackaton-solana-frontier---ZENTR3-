@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Growth — 2AG Web3 Agents"
+version = "1.0.0"
+id = "artifacts/growth"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21097
+
+[services.development]
+run = "pnpm --filter @workspace/growth run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/growth", "run", "build" ]
+publicDir = "artifacts/growth/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21097"
+BASE_PATH = "/"

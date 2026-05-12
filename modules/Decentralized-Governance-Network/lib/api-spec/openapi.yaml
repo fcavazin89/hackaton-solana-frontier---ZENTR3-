@@ -1,0 +1,744 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: DAOX Governance API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: daos
+    description: DAO operations
+  - name: members
+    description: Member operations
+  - name: proposals
+    description: Proposal operations
+  - name: votes
+    description: Vote operations
+  - name: stats
+    description: Stats and analytics
+  - name: ai
+    description: AI governance advisor
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /daos:
+    get:
+      operationId: listDaos
+      tags: [daos]
+      summary: List all DAOs
+      responses:
+        "200":
+          description: List of DAOs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Dao"
+    post:
+      operationId: createDao
+      tags: [daos]
+      summary: Create a new DAO
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDaoBody"
+      responses:
+        "201":
+          description: DAO created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dao"
+
+  /daos/{id}:
+    get:
+      operationId: getDao
+      tags: [daos]
+      summary: Get a DAO by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: DAO details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dao"
+    put:
+      operationId: updateDao
+      tags: [daos]
+      summary: Update a DAO
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDaoBody"
+      responses:
+        "200":
+          description: DAO updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dao"
+    delete:
+      operationId: deleteDao
+      tags: [daos]
+      summary: Delete a DAO
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: DAO deleted
+
+  /daos/{id}/stats:
+    get:
+      operationId: getDaoStats
+      tags: [stats]
+      summary: Get DAO stats summary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: DAO statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DaoStats"
+
+  /daos/{id}/activity:
+    get:
+      operationId: getDaoActivity
+      tags: [stats]
+      summary: Get recent DAO activity feed
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recent activity events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityEvent"
+
+  /daos/{daoId}/members:
+    get:
+      operationId: listMembers
+      tags: [members]
+      summary: List members of a DAO
+      parameters:
+        - name: daoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Members list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Member"
+    post:
+      operationId: addMember
+      tags: [members]
+      summary: Add a member to a DAO
+      parameters:
+        - name: daoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddMemberBody"
+      responses:
+        "201":
+          description: Member added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+
+  /daos/{daoId}/members/{memberId}:
+    delete:
+      operationId: removeMember
+      tags: [members]
+      summary: Remove a member from a DAO
+      parameters:
+        - name: daoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Member removed
+
+  /daos/{daoId}/proposals:
+    get:
+      operationId: listProposals
+      tags: [proposals]
+      summary: List proposals of a DAO
+      parameters:
+        - name: daoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [draft, active, passed, rejected, executed]
+      responses:
+        "200":
+          description: Proposals list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Proposal"
+    post:
+      operationId: createProposal
+      tags: [proposals]
+      summary: Create a new proposal
+      parameters:
+        - name: daoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProposalBody"
+      responses:
+        "201":
+          description: Proposal created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+
+  /daos/{daoId}/proposals/{proposalId}:
+    get:
+      operationId: getProposal
+      tags: [proposals]
+      summary: Get a proposal by ID
+      parameters:
+        - name: daoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: proposalId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Proposal details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+
+  /daos/{daoId}/proposals/{proposalId}/vote:
+    post:
+      operationId: castVote
+      tags: [votes]
+      summary: Cast a vote on a proposal
+      parameters:
+        - name: daoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: proposalId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CastVoteBody"
+      responses:
+        "201":
+          description: Vote cast
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vote"
+
+  /daos/{daoId}/proposals/{proposalId}/results:
+    get:
+      operationId: getProposalResults
+      tags: [votes]
+      summary: Get voting results for a proposal
+      parameters:
+        - name: daoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: proposalId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Voting results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoteResults"
+
+  /governance/overview:
+    get:
+      operationId: getGovernanceOverview
+      tags: [stats]
+      summary: Get platform-wide governance overview
+      responses:
+        "200":
+          description: Platform overview stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GovernanceOverview"
+
+  /ai/recommend-governance:
+    post:
+      operationId: recommendGovernance
+      tags: [ai]
+      summary: AI-powered governance structure recommendation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GovernanceAdvisorInput"
+      responses:
+        "200":
+          description: AI governance recommendation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GovernanceRecommendation"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    Dao:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        mission:
+          type: string
+        tokenSymbol:
+          type: string
+        totalSupply:
+          type: number
+        status:
+          type: string
+          enum: [active, paused, dissolved]
+        memberCount:
+          type: integer
+        proposalCount:
+          type: integer
+        governanceModel:
+          type: string
+          enum: [token-based, reputation-based, multisig, hybrid]
+        votingSystem:
+          type: string
+          enum: [simple-majority, supermajority, quadratic, weighted]
+        executionMechanism:
+          type: string
+          enum: [snapshot, safe-multisig, on-chain, hybrid]
+        aiRecommendation:
+          $ref: "#/components/schemas/GovernanceRecommendation"
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, description, mission, tokenSymbol, totalSupply, status, governanceModel, votingSystem, executionMechanism, memberCount, proposalCount, createdAt]
+
+    CreateDaoBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        mission:
+          type: string
+        tokenSymbol:
+          type: string
+        totalSupply:
+          type: number
+        status:
+          type: string
+          enum: [active, paused, dissolved]
+        governanceModel:
+          type: string
+          enum: [token-based, reputation-based, multisig, hybrid]
+        votingSystem:
+          type: string
+          enum: [simple-majority, supermajority, quadratic, weighted]
+        executionMechanism:
+          type: string
+          enum: [snapshot, safe-multisig, on-chain, hybrid]
+      required: [name, description, mission, tokenSymbol, totalSupply]
+
+    Member:
+      type: object
+      properties:
+        id:
+          type: integer
+        daoId:
+          type: integer
+        name:
+          type: string
+        walletAddress:
+          type: string
+        role:
+          type: string
+          enum: [admin, council, member]
+        tokenBalance:
+          type: number
+        votingPower:
+          type: number
+        isActive:
+          type: boolean
+        joinedAt:
+          type: string
+          format: date-time
+      required: [id, daoId, name, walletAddress, role, tokenBalance, votingPower, isActive, joinedAt]
+
+    AddMemberBody:
+      type: object
+      properties:
+        name:
+          type: string
+        walletAddress:
+          type: string
+        role:
+          type: string
+          enum: [admin, council, member]
+        tokenBalance:
+          type: number
+      required: [name, walletAddress, role, tokenBalance]
+
+    Proposal:
+      type: object
+      properties:
+        id:
+          type: integer
+        daoId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [governance, treasury, membership, protocol, other]
+        status:
+          type: string
+          enum: [draft, active, passed, rejected, executed]
+        creatorName:
+          type: string
+        quorum:
+          type: number
+        forVotes:
+          type: number
+        againstVotes:
+          type: number
+        abstainVotes:
+          type: number
+        totalVotes:
+          type: number
+        votingStartsAt:
+          type: string
+          format: date-time
+        votingEndsAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, daoId, title, description, type, status, creatorName, quorum, forVotes, againstVotes, abstainVotes, totalVotes, votingStartsAt, votingEndsAt, createdAt]
+
+    CreateProposalBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [governance, treasury, membership, protocol, other]
+        quorum:
+          type: number
+        creatorName:
+          type: string
+        votingStartsAt:
+          type: string
+          format: date-time
+        votingEndsAt:
+          type: string
+          format: date-time
+      required: [title, description, type, quorum, creatorName, votingStartsAt, votingEndsAt]
+
+    Vote:
+      type: object
+      properties:
+        id:
+          type: integer
+        proposalId:
+          type: integer
+        memberName:
+          type: string
+        choice:
+          type: string
+          enum: [for, against, abstain]
+        weight:
+          type: number
+        castAt:
+          type: string
+          format: date-time
+      required: [id, proposalId, memberName, choice, weight, castAt]
+
+    CastVoteBody:
+      type: object
+      properties:
+        memberName:
+          type: string
+        choice:
+          type: string
+          enum: [for, against, abstain]
+        weight:
+          type: number
+      required: [memberName, choice, weight]
+
+    VoteResults:
+      type: object
+      properties:
+        proposalId:
+          type: integer
+        forVotes:
+          type: number
+        againstVotes:
+          type: number
+        abstainVotes:
+          type: number
+        totalVotes:
+          type: number
+        quorum:
+          type: number
+        quorumReached:
+          type: boolean
+        passed:
+          type: boolean
+        participationRate:
+          type: number
+        votes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Vote"
+      required: [proposalId, forVotes, againstVotes, abstainVotes, totalVotes, quorum, quorumReached, passed, participationRate, votes]
+
+    DaoStats:
+      type: object
+      properties:
+        daoId:
+          type: integer
+        totalMembers:
+          type: integer
+        activeProposals:
+          type: integer
+        passedProposals:
+          type: integer
+        rejectedProposals:
+          type: integer
+        totalVotesCast:
+          type: number
+        avgParticipationRate:
+          type: number
+        treasuryBalance:
+          type: number
+        tokenSymbol:
+          type: string
+      required: [daoId, totalMembers, activeProposals, passedProposals, rejectedProposals, totalVotesCast, avgParticipationRate, treasuryBalance, tokenSymbol]
+
+    ActivityEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [proposal_created, vote_cast, member_joined, proposal_passed, proposal_rejected, dao_updated]
+        description:
+          type: string
+        actorName:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required: [id, type, description, actorName, timestamp]
+
+    GovernanceOverview:
+      type: object
+      properties:
+        totalDaos:
+          type: integer
+        totalMembers:
+          type: integer
+        totalProposals:
+          type: integer
+        activeProposals:
+          type: integer
+        totalVotesCast:
+          type: number
+        avgParticipationRate:
+          type: number
+        recentProposals:
+          type: array
+          items:
+            $ref: "#/components/schemas/Proposal"
+      required: [totalDaos, totalMembers, totalProposals, activeProposals, totalVotesCast, avgParticipationRate, recentProposals]
+
+    GovernanceAdvisorInput:
+      type: object
+      properties:
+        stage:
+          type: string
+          enum: [idea, build, launch, growth, scale]
+          description: Current startup stage
+        communitySize:
+          type: integer
+          description: Number of community members
+        tokenDistribution:
+          type: string
+          enum: [not-defined, defined, distributed, circulating]
+          description: State of token distribution
+        governanceGoal:
+          type: string
+          description: Main governance objective (free text)
+        riskLevel:
+          type: string
+          enum: [low, medium, high]
+          description: Risk tolerance
+      required: [stage, communitySize, tokenDistribution, governanceGoal]
+
+    GovernanceRecommendation:
+      type: object
+      properties:
+        daoModel:
+          type: string
+          enum: [token-based, reputation-based, multisig, hybrid]
+        votingSystem:
+          type: string
+          enum: [simple-majority, supermajority, quadratic, weighted]
+        proposalTypes:
+          type: array
+          items:
+            type: string
+        quorum:
+          type: string
+          description: Recommended quorum percentage (e.g. "10%")
+        executionMechanism:
+          type: string
+          enum: [snapshot, safe-multisig, on-chain, hybrid]
+        recommendation:
+          type: string
+          description: Human-readable strategic recommendation
+        rationale:
+          type: string
+          description: Detailed reasoning behind the recommendation
+        risks:
+          type: array
+          items:
+            type: string
+          description: Key risks to be aware of
+        nextSteps:
+          type: array
+          items:
+            type: string
+          description: Recommended implementation steps
+        maturityScore:
+          type: integer
+          description: DAO maturity score 1-10
+      required: [daoModel, votingSystem, proposalTypes, quorum, executionMechanism, recommendation, rationale, risks, nextSteps, maturityScore]

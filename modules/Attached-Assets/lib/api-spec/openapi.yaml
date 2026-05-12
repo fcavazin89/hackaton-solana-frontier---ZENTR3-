@@ -1,0 +1,786 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: capital3
+    description: CAPITAL3 Web3 funding and tokenomics agent operations
+  - name: mvp
+    description: MVP Validator agent operations
+  - name: bizmodel
+    description: Business Model Architect agent operations
+  - name: pitch
+    description: Pitch Builder agent operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /capital3/analyze:
+    post:
+      operationId: analyzeStartup
+      tags: [capital3]
+      summary: Analyze a Web3 startup for funding strategy and tokenomics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartupAnalysisRequest"
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StartupAnalysisResult"
+
+  /capital3/analyses:
+    get:
+      operationId: listAnalyses
+      tags: [capital3]
+      summary: List all previous startup analyses
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of analyses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisList"
+
+  /capital3/analyses/{id}:
+    get:
+      operationId: getAnalysis
+      tags: [capital3]
+      summary: Get a specific analysis by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StartupAnalysisResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /capital3/stats:
+    get:
+      operationId: getStats
+      tags: [capital3]
+      summary: Get aggregate stats across all analyses
+      responses:
+        "200":
+          description: Aggregate statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisStats"
+
+  # ── MVP Validator ───────────────────────────────────────────────────────
+  /mvp/validate:
+    post:
+      operationId: validateMvp
+      tags: [mvp]
+      summary: Validate startup MVP strategy and FIT assessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MvpValidationRequest"
+      responses:
+        "200":
+          description: MVP validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MvpValidationResult"
+
+  /mvp/analyses:
+    get:
+      operationId: listMvpAnalyses
+      tags: [mvp]
+      summary: List all MVP validation analyses
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of MVP analyses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MvpAnalysisList"
+
+  /mvp/analyses/{id}:
+    get:
+      operationId: getMvpAnalysis
+      tags: [mvp]
+      summary: Get a specific MVP analysis by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: MVP validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MvpValidationResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Business Model Architect ────────────────────────────────────────────
+  /bizmodel/analyze:
+    post:
+      operationId: analyzeBusinessModel
+      tags: [bizmodel]
+      summary: Analyze and recommend optimal business model
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessModelRequest"
+      responses:
+        "200":
+          description: Business model analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessModelResult"
+
+  /bizmodel/analyses:
+    get:
+      operationId: listBusinessModelAnalyses
+      tags: [bizmodel]
+      summary: List all business model analyses
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of business model analyses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessModelList"
+
+  /bizmodel/analyses/{id}:
+    get:
+      operationId: getBusinessModelAnalysis
+      tags: [bizmodel]
+      summary: Get a specific business model analysis by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Business model analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessModelResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Pitch Builder ───────────────────────────────────────────────────────
+  /pitch/build:
+    post:
+      operationId: buildPitch
+      tags: [pitch]
+      summary: Generate a complete pitch deck narrative
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PitchRequest"
+      responses:
+        "200":
+          description: Pitch deck result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PitchResult"
+
+  /pitch/pitches:
+    get:
+      operationId: listPitches
+      tags: [pitch]
+      summary: List all generated pitches
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of pitches
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PitchList"
+
+  /pitch/pitches/{id}:
+    get:
+      operationId: getPitch
+      tags: [pitch]
+      summary: Get a specific pitch by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Pitch result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PitchResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    # ── CAPITAL3 Schemas ─────────────────────────────────────────────────
+    StartupAnalysisRequest:
+      type: object
+      properties:
+        startup_name:
+          type: string
+        description:
+          type: string
+        target_audience:
+          type: string
+        revenue_model:
+          type: string
+        stage:
+          type: string
+          enum: [idea, pre-seed, seed, series-a, growth]
+        sector:
+          type: string
+        monthly_burn:
+          type: number
+        existing_capital:
+          type: number
+      required:
+        - startup_name
+        - description
+        - target_audience
+        - revenue_model
+        - stage
+        - sector
+
+    Tokenomics:
+      type: object
+      properties:
+        total_supply:
+          type: string
+        distribution:
+          type: object
+          properties:
+            team:
+              type: string
+            investors:
+              type: string
+            community:
+              type: string
+            treasury:
+              type: string
+            ecosystem:
+              type: string
+          required: [team, investors, community, treasury, ecosystem]
+        vesting_schedule:
+          type: string
+        token_utility:
+          type: string
+      required: [total_supply, distribution, vesting_schedule, token_utility]
+
+    FundingScenario:
+      type: object
+      properties:
+        name:
+          type: string
+          enum: [conservative, moderate, aggressive]
+        target_raise:
+          type: string
+        valuation:
+          type: string
+        timeline:
+          type: string
+        probability:
+          type: string
+      required: [name, target_raise, valuation, timeline, probability]
+
+    StartupAnalysisResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        startup_name:
+          type: string
+        sector:
+          type: string
+        stage:
+          type: string
+        funding_strategy:
+          type: string
+        tokenomics:
+          $ref: "#/components/schemas/Tokenomics"
+        revenue_model:
+          type: string
+        runway_estimate:
+          type: string
+        risk_level:
+          type: string
+          enum: [low, medium, high, very-high]
+        risk_factors:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        scenarios:
+          type: array
+          items:
+            $ref: "#/components/schemas/FundingScenario"
+        valuation_estimate:
+          type: string
+        created_at:
+          type: string
+      required:
+        - startup_name
+        - sector
+        - stage
+        - funding_strategy
+        - tokenomics
+        - revenue_model
+        - runway_estimate
+        - risk_level
+        - risk_factors
+        - recommendations
+        - scenarios
+        - valuation_estimate
+
+    AnalysisList:
+      type: object
+      properties:
+        analyses:
+          type: array
+          items:
+            $ref: "#/components/schemas/StartupAnalysisResult"
+        total:
+          type: integer
+      required: [analyses, total]
+
+    AnalysisStats:
+      type: object
+      properties:
+        total_analyses:
+          type: integer
+        by_stage:
+          type: object
+          additionalProperties:
+            type: integer
+        by_sector:
+          type: object
+          additionalProperties:
+            type: integer
+        by_risk_level:
+          type: object
+          additionalProperties:
+            type: integer
+        avg_runway_months:
+          type: number
+      required: [total_analyses, by_stage, by_sector, by_risk_level, avg_runway_months]
+
+    # ── MVP Schemas ──────────────────────────────────────────────────────
+    MvpValidationRequest:
+      type: object
+      properties:
+        startup_name:
+          type: string
+        description:
+          type: string
+        stage:
+          type: string
+          enum: [idea, pre-seed, seed, series-a, growth]
+        problem_statement:
+          type: string
+        proposed_mvp:
+          type: string
+        target_audience:
+          type: string
+      required: [startup_name, description, stage, problem_statement, proposed_mvp, target_audience]
+
+    FitStageScore:
+      type: object
+      properties:
+        score:
+          type: integer
+        assessment:
+          type: string
+        evidence:
+          type: string
+        gaps:
+          type: array
+          items:
+            type: string
+      required: [score, assessment, evidence, gaps]
+
+    MvpValidationResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        startup_name:
+          type: string
+        stage:
+          type: string
+        fit_stages:
+          type: object
+          properties:
+            problem_solution:
+              $ref: "#/components/schemas/FitStageScore"
+            product_solution:
+              $ref: "#/components/schemas/FitStageScore"
+            product_market:
+              $ref: "#/components/schemas/FitStageScore"
+          required: [problem_solution, product_solution, product_market]
+        validation_strategy:
+          type: object
+          properties:
+            approach:
+              type: string
+            experiments:
+              type: array
+              items:
+                type: string
+            tactics:
+              type: array
+              items:
+                type: string
+          required: [approach, experiments, tactics]
+        mvp_type:
+          type: string
+        validation_risks:
+          type: array
+          items:
+            type: string
+        recommendation:
+          type: string
+          enum: [pivot, persist, accelerate]
+        recommendation_rationale:
+          type: string
+        next_steps:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+      required:
+        - startup_name
+        - stage
+        - fit_stages
+        - validation_strategy
+        - mvp_type
+        - validation_risks
+        - recommendation
+        - recommendation_rationale
+        - next_steps
+
+    MvpAnalysisList:
+      type: object
+      properties:
+        analyses:
+          type: array
+          items:
+            $ref: "#/components/schemas/MvpValidationResult"
+        total:
+          type: integer
+      required: [analyses, total]
+
+    # ── Business Model Schemas ───────────────────────────────────────────
+    BusinessModelRequest:
+      type: object
+      properties:
+        startup_name:
+          type: string
+        description:
+          type: string
+        sector:
+          type: string
+        target_audience:
+          type: string
+        value_proposition:
+          type: string
+        existing_revenue:
+          type: string
+      required: [startup_name, description, sector, target_audience, value_proposition]
+
+    BusinessModelOption:
+      type: object
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+        fit_score:
+          type: integer
+        pros:
+          type: array
+          items:
+            type: string
+        cons:
+          type: array
+          items:
+            type: string
+      required: [type, description, fit_score, pros, cons]
+
+    RevenueStream:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        potential:
+          type: string
+      required: [name, description, potential]
+
+    BusinessModelResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        startup_name:
+          type: string
+        sector:
+          type: string
+        primary_model:
+          $ref: "#/components/schemas/BusinessModelOption"
+        alternative_models:
+          type: array
+          items:
+            $ref: "#/components/schemas/BusinessModelOption"
+        monetization_strategy:
+          type: string
+        cac_ltv_analysis:
+          type: string
+        revenue_streams:
+          type: array
+          items:
+            $ref: "#/components/schemas/RevenueStream"
+        competitive_positioning:
+          type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+      required:
+        - startup_name
+        - sector
+        - primary_model
+        - alternative_models
+        - monetization_strategy
+        - cac_ltv_analysis
+        - revenue_streams
+        - competitive_positioning
+        - recommendations
+
+    BusinessModelList:
+      type: object
+      properties:
+        analyses:
+          type: array
+          items:
+            $ref: "#/components/schemas/BusinessModelResult"
+        total:
+          type: integer
+      required: [analyses, total]
+
+    # ── Pitch Builder Schemas ────────────────────────────────────────────
+    PitchRequest:
+      type: object
+      properties:
+        startup_name:
+          type: string
+        sector:
+          type: string
+        stage:
+          type: string
+          enum: [idea, pre-seed, seed, series-a, growth]
+        problem:
+          type: string
+        solution:
+          type: string
+        market_size:
+          type: string
+        secret_sauce:
+          type: string
+        team_description:
+          type: string
+        funding_ask:
+          type: string
+        traction:
+          type: string
+      required: [startup_name, sector, stage, problem, solution, market_size, secret_sauce, team_description, funding_ask]
+
+    PitchResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        startup_name:
+          type: string
+        sector:
+          type: string
+        stage:
+          type: string
+        pitch_cover:
+          type: string
+        pitch_context:
+          type: string
+        pitch_problem:
+          type: string
+        pitch_market:
+          type: string
+        pitch_solution:
+          type: string
+        pitch_business_model:
+          type: string
+        pitch_traction:
+          type: string
+        pitch_go_to_market:
+          type: string
+        pitch_competitors:
+          type: string
+        pitch_team:
+          type: string
+        pitch_investment_round:
+          type: string
+        key_metrics:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              value:
+                type: string
+            required: [label, value]
+        created_at:
+          type: string
+      required:
+        - startup_name
+        - sector
+        - stage
+        - pitch_cover
+        - pitch_context
+        - pitch_problem
+        - pitch_market
+        - pitch_solution
+        - pitch_business_model
+        - pitch_traction
+        - pitch_go_to_market
+        - pitch_competitors
+        - pitch_team
+        - pitch_investment_round
+        - key_metrics
+
+    PitchList:
+      type: object
+      properties:
+        pitches:
+          type: array
+          items:
+            $ref: "#/components/schemas/PitchResult"
+        total:
+          type: integer
+      required: [pitches, total]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

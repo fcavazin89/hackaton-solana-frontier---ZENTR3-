@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "FORGE3 — Engenharia"
+version = "1.0.0"
+id = "artifacts/forge3"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21699
+
+[services.development]
+run = "pnpm --filter @workspace/forge3 run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/forge3", "run", "build" ]
+publicDir = "artifacts/forge3/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21699"
+BASE_PATH = "/"
